@@ -1,4 +1,4 @@
-# Senior QA Automation Engineer Interview Prep Hub
+# Interview Prep Hub
 
 A single-page, fully responsive study app for preparing a **Senior QA Automation Engineer**
 interview in English — technical, leadership and system design.
