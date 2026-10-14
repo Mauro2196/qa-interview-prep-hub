@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Senior QA Automation Engineer Interview Prep Hub - technical, leadership and system design interview preparation." />
+<title>Senior QA Automation Engineer Interview Prep Hub</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  if (typeof tailwind !== 'undefined') {
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
+        },
+        colors: {
+          ink: { 950: '#05070d', 900: '#080b14', 850: '#0b0f1b', 800: '#0f1524', 700: '#161d30' }
+        },
+        boxShadow: {
+          glow: '0 0 0 1px rgba(99,102,241,.18), 0 18px 50px -20px rgba(79,70,229,.45)',
+          card: '0 10px 40px -24px rgba(0,0,0,.9)'
+        },
+        keyframes: {
+          fadeUp: { '0%': { opacity: '0', transform: 'translateY(14px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+          fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+          pop: { '0%': { opacity: '0', transform: 'scale(.96)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+          floatY: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } }
+        },
+        animation: {
+          'fade-up': 'fadeUp .45s cubic-bezier(.16,1,.3,1) both',
+          'fade-in': 'fadeIn .35s ease-out both',
+          'pop': 'pop .28s cubic-bezier(.16,1,.3,1) both'
+        }
+      }
+    }
+  };
+  }
+</script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { background-color: #05070d; }
+  ::selection { background: rgba(99,102,241,.35); }
+
+  /* ---------------- Animated gradient mesh background ---------------- */
+  .mesh {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    background:
+      radial-gradient(1300px 800px at 50% -25%, rgba(30,41,59,.7), transparent 62%),
+      #05070d;
+  }
+  /* vignette keeps the centre readable and the edges deep */
+  .mesh::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(3,5,10,.72) 100%);
+  }
+
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(80px);
+    opacity: .45; will-change: transform; backface-visibility: hidden;
+  }
+  .blob-1 {
+    width: 48vw; height: 48vw; min-width: 420px; min-height: 420px; left: -14vw; top: -16vw;
+    background: radial-gradient(circle at 35% 35%, rgba(99,102,241,.95), rgba(99,102,241,0) 68%);
+    animation: mesh1 30s ease-in-out infinite;
+  }
+  .blob-2 {
+    width: 42vw; height: 42vw; min-width: 380px; min-height: 380px; right: -12vw; top: -10vw;
+    background: radial-gradient(circle at 60% 40%, rgba(34,211,238,.85), rgba(34,211,238,0) 68%);
+    animation: mesh2 34s ease-in-out infinite;
+  }
+  .blob-3 {
+    width: 50vw; height: 50vw; min-width: 440px; min-height: 440px; left: 26vw; bottom: -26vw;
+    background: radial-gradient(circle at 50% 50%, rgba(16,185,129,.75), rgba(16,185,129,0) 70%);
+    animation: mesh3 38s ease-in-out infinite;
+  }
+  .blob-4 {
+    width: 34vw; height: 34vw; min-width: 320px; min-height: 320px; left: 38vw; top: 24vh;
+    background: radial-gradient(circle at 50% 50%, rgba(245,158,11,.55), rgba(245,158,11,0) 70%);
+    animation: mesh4 26s ease-in-out infinite; opacity: .3;
+  }
+  .blob-5 {
+    width: 30vw; height: 30vw; min-width: 280px; min-height: 280px; right: 6vw; bottom: 2vh;
+    background: radial-gradient(circle at 50% 50%, rgba(139,92,246,.75), rgba(139,92,246,0) 70%);
+    animation: mesh5 32s ease-in-out infinite;
+  }
+
+  /* slow aurora sweep across the whole canvas */
+  .aurora {
+    position: absolute; inset: -35% -15%; opacity: .75; filter: blur(34px);
+    background: linear-gradient(105deg, transparent 34%, rgba(129,140,248,.18) 47%, rgba(45,212,191,.14) 56%, transparent 68%);
+    animation: aurora 22s linear infinite;
+  }
+
+  @keyframes mesh1 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 33% { transform: translate3d(9vw,7vh,0) scale(1.14); } 66% { transform: translate3d(-4vw,12vh,0) scale(.92); } }
+  @keyframes mesh2 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 33% { transform: translate3d(-8vw,10vh,0) scale(.9); } 66% { transform: translate3d(-3vw,-4vh,0) scale(1.16); } }
+  @keyframes mesh3 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 33% { transform: translate3d(-10vw,-8vh,0) scale(1.1); } 66% { transform: translate3d(8vw,-3vh,0) scale(.94); } }
+  @keyframes mesh4 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-12vw,8vh,0) scale(1.25); } }
+  @keyframes mesh5 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-9vw,-12vh,0) scale(1.18); } }
+  @keyframes aurora { 0% { transform: translate3d(-26%,0,0); } 100% { transform: translate3d(26%,0,0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blob, .aurora { animation: none !important; }
+  }
+
+  .thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+  .thin-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
+  .thin-scroll::-webkit-scrollbar-thumb:hover { background: #334155; background-clip: content-box; }
+
+  .panel { background: linear-gradient(180deg, rgba(15,21,36,.88), rgba(8,11,20,.9)); border: 1px solid rgba(148,163,184,.10); }
+  .grid-lines { background-image: linear-gradient(rgba(148,163,184,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.055) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(to bottom, #000 0%, transparent 85%); }
+
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  .kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1; padding: 3px 6px; border-radius: 5px; border: 1px solid rgba(148,163,184,.28); background: rgba(30,41,59,.6); color: #cbd5e1; }
+
+  /* Custom checkbox - deterministic, no framework variants involved */
+  .chk svg { transform: scale(0); transition: transform .18s cubic-bezier(.16,1,.3,1); }
+  .chk-input:hover + .chk { border-color: #94a3b8; }
+  .chk-input:checked + .chk { background-color: #6366f1; border-color: #6366f1; }
+  .chk-input:checked:hover + .chk { border-color: #6366f1; }
+  .chk-input:checked + .chk svg { transform: scale(1); }
+  .chk-input:focus-visible + .chk { outline: 2px solid #818cf8; outline-offset: 2px; }
+</style>
+</head>
+
+<body class="font-sans text-slate-300 antialiased min-h-screen">
+
+<!-- animated gradient mesh backdrop -->
+<div class="mesh" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+  <span class="blob blob-4"></span>
+  <span class="blob blob-5"></span>
+  <span class="aurora"></span>
+</div>
+
+<!-- faint blueprint grid, layered above the mesh but below content -->
+<div class="pointer-events-none fixed inset-0 z-10 grid-lines opacity-50"></div>
+
+<div class="relative z-20 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-28">
+
+  <!-- ================= HEADER ================= -->
+  <header class="pt-8 sm:pt-12">
+    <div class="flex flex-wrap items-center gap-3 text-[11px] font-medium uppercase tracking-[0.18em] text-indigo-300/80">
+      <span class="inline-flex items-center gap-2 rounded-full border border-indigo-400/25 bg-indigo-500/10 px-3 py-1">
+        <span class="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse"></span> Interview Prep
+      </span>
+      <span class="text-slate-500">v1.0</span>
+      <span class="text-slate-500 hidden sm:inline">·</span>
+      <span class="text-slate-500 hidden sm:inline">English · Senior Level</span>
+    </div>
+
+    <div class="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+      <div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.08]">
+          Senior QA Automation Engineer
+          <span class="block bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent">Interview Prep Hub</span>
+        </h1>
+        <p class="mt-4 max-w-2xl text-base sm:text-lg text-slate-400">
+          Master your technical, leadership, and system design interviews in English.
+        </p>
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          <button id="btn-random-header" class="group inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-indigo-400 active:scale-[.98]">
+            <svg class="h-4 w-4 transition group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M17 6h4M18 3l3 3-3 3M18 15l3 3-3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Generate Random Mock Question
+          </button>
+          <a href="#modules" class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-white/10">
+            Browse modules
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <button id="btn-reset" class="inline-flex items-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:text-rose-300 hover:border-rose-500/30 hover:bg-rose-500/10">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reset progress
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress tracker -->
+      <section aria-label="Overall preparation progress" class="panel rounded-2xl p-5 shadow-card">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Overall preparation</p>
+            <p class="mt-1 text-xs text-slate-500">Saved automatically in your browser</p>
+          </div>
+          <div class="text-right">
+            <span id="pct" class="text-4xl font-extrabold tabular-nums text-white">0</span><span class="text-xl font-bold text-indigo-400">%</span>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">complete</p>
+          </div>
+        </div>
+
+        <div class="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-800/90 ring-1 ring-inset ring-white/5">
+          <div id="bar" class="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 transition-[width] duration-700 ease-out" style="width:0%"></div>
+        </div>
+
+        <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-lg bg-white/[0.03] py-2.5 ring-1 ring-inset ring-white/5">
+            <dt class="text-[10px] uppercase tracking-wider text-slate-500">Topics</dt>
+            <dd id="stat-topics" class="text-sm font-bold text-white tabular-nums">0/0</dd>
+          </div>
+          <div class="rounded-lg bg-white/[0.03] py-2.5 ring-1 ring-inset ring-white/5">
+            <dt class="text-[10px] uppercase tracking-wider text-slate-500">Mastered</dt>
+            <dd id="stat-mastered" class="text-sm font-bold text-emerald-300 tabular-nums">0/0</dd>
+          </div>
+          <div class="rounded-lg bg-white/[0.03] py-2.5 ring-1 ring-inset ring-white/5">
+            <dt class="text-[10px] uppercase tracking-wider text-slate-500">Review</dt>
+            <dd id="stat-review" class="text-sm font-bold text-amber-300 tabular-nums">0</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+  </header>
+
+  <!-- ================= MODULE TABS ================= -->
+  <nav id="modules" aria-label="Preparation modules" class="mt-10 scroll-mt-6">
+    <div id="tabs" class="flex gap-2 overflow-x-auto pb-2 thin-scroll sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible lg:pb-0"></div>
+  </nav>
+
+  <!-- ================= MODULE BODY ================= -->
+  <main id="module-root" class="mt-6"></main>
+
+  <footer class="mt-16 border-t border-white/5 pt-6 text-center text-xs text-slate-600">
+    Built for interview preparation · progress persists locally in <span class="font-mono text-slate-500">localStorage</span> · press <span class="kbd">R</span> for a random question anywhere on the page.
+  </footer>
+</div>
+
+<!-- toast -->
+<div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 translate-y-4 opacity-0 transition-all duration-300">
+  <div class="rounded-xl border border-white/10 bg-ink-800/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-card backdrop-blur"></div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const M1 = [
+  {
+    name: 'Framework foundations',
+    hint: 'Architecture questions come first. Be able to explain the runtime model of each tool, not just the API.',
+    items: [
+      {
+        id: 'm1-selenium', title: 'Selenium WebDriver architecture', tags: ['Selenium 4', 'W3C', 'BiDi'],
+        detail: 'Be ready to draw the architecture: your test code \u2192 client binding (Java / JS / Python) \u2192 HTTP request \u2192 browser driver (chromedriver, geckodriver, msedgedriver) \u2192 browser. Selenium 4 replaced the de-facto JSON Wire Protocol with the W3C WebDriver standard, which changes how capabilities are serialised (nested under alwaysMatch / firstMatch instead of a flat blob) and removes legacy endpoints such as /session/:id/timeouts/implicit_wait.',
+        bullets: [
+          'Explain WebDriver BiDi: a bidirectional channel for network interception, console logs, dialog handling and page events.',
+          'Selenium Grid 4 roles: Router, Session Queue, Distributor and Node \u2014 how a session is queued and placed.',
+          'Why Actions / W3C actions replaced the old move-and-click sequence, and how pointer and key sources work.',
+          'Common follow-up: "why did your tests break when Selenium 4 was upgraded?" \u2192 capabilities serialisation and driver version pinning.'
+        ]
+      },
+      {
+        id: 'm1-playwright', title: 'Playwright execution model', tags: ['Playwright', 'Auto-wait', 'Tracing'],
+        detail: 'Playwright ships its own driver process and speaks a custom protocol directly to the Chromium, Firefox and WebKit builds it controls. Browser contexts give you isolated sessions cheaply, which is the key reason parallelism and multi-account flows are straightforward.',
+        bullets: [
+          'Auto-waiting: every actionability check (visible \u2192 stable \u2192 enabled \u2192 receives pointer events) before a click or fill.',
+          'Strict locator mode: a locator that resolves to multiple elements throws instead of silently picking the first.',
+          'Fixtures + project dependencies for reusable authentication (storageState) instead of logging in per test.',
+          'Trace viewer and trace-on-first-retry: DOM snapshots, network, console and a timeline for post-mortem debugging.'
+        ]
+      },
+      {
+        id: 'm1-cypress', title: 'Cypress execution model & its limits', tags: ['Cypress', 'Same-origin', 'cy.intercept'],
+        detail: 'Cypress runs inside the browser as a companion application and drives the page through an in-browser driver, with a Node.js backend for process-level work. Understanding this explains its famous limitations.',
+        bullets: [
+          'Same-origin restrictions and the internal proxy: multi-domain and cross-tab flows need deliberate workarounds.',
+          'Determinism via aliases and network waiting (cy.intercept + cy.wait) rather than arbitrary sleep calls.',
+          'The single-browser-process model: why you cannot run genuine multi-tab scenarios or a second browser instance.',
+          'cy.task / plugins: the boundary where code must leave the browser and enter Node (file system, DB, crypto).'
+        ]
+      },
+      {
+        id: 'm1-webdriverio', title: 'WebdriverIO and the service architecture', tags: ['WebdriverIO', 'DevTools', 'Appium'],
+        detail: 'WebdriverIO sits on top of both the WebDriver and Chrome DevTools protocols and is organised around a runner with pluggable services, reporters and plugins.',
+        bullets: [
+          'Smart element locators with automatic retry \u2014 a different resilience model to Playwright auto-wait.',
+          'Multimethod / custom commands as the extension point for domain-specific test APIs.',
+          'First-class Appium integration, so a single tool can cover web and native mobile.',
+          'The sync (v7 legacy) versus async (v8+) API story and why the migration mattered for TypeScript users.'
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Execution, CI/CD & scale',
+    hint: 'Senior conversations move from "can you write a test" to "can you run 4,000 of them in under ten minutes".',
+    items: [
+      {
+        id: 'm1-cicd', title: 'CI/CD pipeline design', tags: ['GitHub Actions', 'Jenkins', 'Quality gates'],
+        detail: 'Walk through a real pipeline rather than listing tool names: install with a lockfile-backed cache, lint and unit gate, build once and promote the artefact, split E2E across a matrix, upload traces / screenshots / videos as artefacts on failure, and post a PR comment with a readable summary.',
+        bullets: [
+          'Name your gates explicitly: smoke must be 100% on every merge; regression has a flake budget of \u2264 0.5%.',
+          'Budget the feedback loop: PR pipeline under 10 minutes, full matrix nightly, release candidate on demand.',
+          'Fail fast ordering: cheapest and highest-risk tests first so the signal arrives early.',
+          'Security and supply chain: pinned actions, cached dependencies keyed by lockfile hash, secrets via OIDC.'
+        ]
+      },
+      {
+        id: 'm1-parallel', title: 'Parallel execution vs sharding', tags: ['Workers', 'Sharding', 'Load balancing'],
+        detail: 'Interviewers frequently test whether you know these are different things. Parallelism is concurrency inside one run (a worker pool across available slots); sharding splits the suite into independent subsets executed as separate CI jobs or containers whose results are merged.',
+        bullets: [
+          'Playwright --shard=1/4 and Jest --shard are sharding; --workers and Mocha --parallel are parallelism.',
+          'Balance shards with historical durations, not test counts \u2014 one 90-second test can double a shard.',
+          'Deterministic naming and result merging so the report is stable across shards.',
+          'The number one parallel killer: shared mutable test data and order-dependent assumptions.'
+        ]
+      },
+      {
+        id: 'm1-flaky', title: 'Flaky test management system', tags: ['Quarantine', 'Retry policy', 'RCA'],
+        detail: 'Interviewers want a system, not a workaround. Flakiness is a defect in the test or the environment and deserves the same rigour as a product bug.',
+        bullets: [
+          'Classify every flake: timing / implicit wait, test data, environment, concurrency, clock, or a genuine product race.',
+          'Quarantine automatically so a flaky test never blocks a release, with a named owner and a fix-by date.',
+          'Track a flakiness rate per suite with a target and an SLA; publish a weekly report.',
+          'Ban "retry until green" as a merge condition \u2014 retries should diagnose, never mask.'
+        ]
+      },
+      {
+        id: 'm1-reporting', title: 'Test reporting & observability', tags: ['Allure', 'ReportPortal', 'Traces'],
+        detail: 'A failing run should lead to the answer in one click: ticket, commit, browser, trace and log excerpt linked together.',
+        bullets: [
+          'Allure: epic / feature / story hierarchy, defect categories, retry history and an environment table.',
+          'ReportPortal: auto-triage, statistics and ML-based grouping of repeated failures.',
+          'Playwright HTML reporter + trace.zip, JUnit XML for CI ingestion, and native CI test reports.',
+          'Structured logs with a correlation ID so a failed UI step can be matched to the server log line.'
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Design & strategy',
+    hint: 'Where senior candidates differentiate: contracts, locators, and the cost of maintenance.',
+    items: [
+      {
+        id: 'm1-locators', title: 'Locator strategy & test design patterns', tags: ['data-testid', 'POM', 'Screenplay'],
+        detail: 'Push for stable, intention-revealing locators: role and name queries where available, data-testid agreed as a contract with developers, and no XPath chains, nth-child indexes or sleep-based synchronisation.',
+        bullets: [
+          'Page Object Model pays off when flows are reused; for a small suite, plain locators are cheaper to maintain.',
+          'Screenplay / Flow patterns shine when many actors, roles and data combinations interact.',
+          'Version your page objects with the UI, or you end up with a shadow layer of indirection nobody trusts.',
+          'Make testability a requirement: the feature is not done until the state it creates is observable to a test.'
+        ]
+      },
+      {
+        id: 'm1-crossbrowser', title: 'Cross-browser matrix & visual regression', tags: ['Device cloud', 'Percy', 'Applitools'],
+        detail: 'Define a browser and device matrix that reflects real analytics rather than "test everything". Testing the full matrix on every merge is the fastest way to build a suite nobody waits for.',
+        bullets: [
+          'Headless vs headed: some rendering, font and animation defects only appear in one of them.',
+          'Clouds: BrowserStack, Sauce Labs, AWS Device Farm \u2014 and what they cost at scale.',
+          'Deterministic screenshots: fixed viewport and device scale, bundled fonts, animations off, dynamic regions masked.',
+          'Diff thresholds plus anti-aliasing compensation; zero tolerance produces noise nobody reads.'
+        ]
+      }
+    ]
+  }
+];
+
+const M2 = [
+  {
+    name: 'Algorithms & data manipulation',
+    hint: 'QA-flavoured tasks: parsing logs, grouping results, finding duplicates. Always state complexity and edge cases out loud.',
+    items: [
+      {
+        id: 'm2-strings', title: 'Log parsing & string manipulation', tags: ['Regex', 'Parsing'],
+        detail: 'Interviewers love log parsing because it exposes how you handle mess. Talk through the regex capture groups, normalising timestamps, counting by status, extracting failing test names, and formatting a clean report string.',
+        bullets: [
+          'Edge cases to name unprompted: CRLF line endings, ANSI colour codes, multiline stack traces, missing fields.',
+          'State your complexity: single pass over the log is O(n) time and O(k) in memory for k distinct suites.',
+          'Follow-up ask: "how would you stream a 2 GB log file?" \u2192 readline streaming instead of split().'
+        ],
+        code: {
+          js: `const LINE = /^(\\S+)\\s+(PASS|FAIL)\\s+(.+)$/;
+const ANSI = /\\u001b\\[[0-9;]*m/g;
+
+function summarize(log) {
+  const out = {
+    passed: 0, failed: 0, unparsed: 0,
+    failures: [], slowest: { name: null, ms: 0 }
+  };
+
+  for (const raw of log.replace(/\\r/g, '').split('\\n')) {
+    const line = raw.replace(ANSI, '').trim();
+    if (!line) continue;
+
+    const m = LINE.exec(line);
+    if (!m) { out.unparsed++; continue; }
+
+    const [, ts, status, rest] = m;
+    const [name, duration] = rest.split(' ');
+    const ms = Number.parseInt(duration, 10) || 0;
+
+    if (status === 'PASS') out.passed++;
+    else { out.failed++; out.failures.push(name); }
+
+    if (ms > out.slowest.ms) out.slowest = { name, ms };
+    out.lastSeen = ts;
+  }
+  return out;
+}`,
+          py: `import re
+from collections import Counter
+
+LINE = re.compile(r'^(\\S+)\\s+(PASS|FAIL)\\s+(.+)$')
+ANSI = re.compile(r'\\x1b\\[[0-9;]*m')
+
+def summarize(log: str) -> dict:
+    out = Counter()
+    failures, slowest = [], ('', -1)
+
+    for raw in log.replace('\\r\\n', '\\n').split('\\n'):
+        line = ANSI.sub('', raw).strip()
+        if not line:
+            continue
+
+        m = LINE.match(line)
+        if not m:
+            out['unparsed'] += 1
+            continue
+
+        _, status, rest = m.groups()
+        name, _, duration = rest.rpartition(' ')
+        ms = int(duration.rstrip('ms') or 0)
+
+        out[status.lower() + 'ed'] += 1          # PASS -> passed, FAIL -> failed
+        if status == 'FAIL':
+            failures.append(name)
+        if ms > slowest[1]:
+            slowest = (name, ms)
+
+    return {**out, 'failures': failures, 'slowest': slowest}`
+        }
+      },
+      {
+        id: 'm2-data', title: 'Data structures: grouping, dedup, indexing', tags: ['Map', 'defaultdict'],
+        detail: 'Typical task: given 10k test results, group them by suite, find duplicate titles and return the five slowest. Show fluency with Map / Set, reduce, complexity analysis, and why a Map beats a plain object when keys are dynamic or non-string.',
+        bullets: [
+          'Complexity out loud: O(n) to group, O(n log n) to sort for top-k (or O(n log k) with a heap).',
+          'In Python: defaultdict, Counter, dict and generator expressions to keep memory flat.',
+          'Mention Object.groupBy / lodash groupBy as the idiomatic modern alternative, then write it by hand.'
+        ],
+        code: {
+          js: `function groupBySuite(results) {
+  const grouped = new Map();
+
+  for (const r of results) {
+    // last directory in the path is the suite name
+    const key = r.file.split(/[\\\\/]/).slice(-2, -1)[0] || 'root';
+    if (!grouped.has(key)) grouped.set(key, { passed: 0, failed: 0, tests: [] });
+
+    const bucket = grouped.get(key);
+    bucket[r.status === 'passed' ? 'passed' : 'failed']++;
+    bucket.tests.push(r);
+  }
+
+  const titles = results.map(r => r.title);
+  const duplicates = titles.filter((t, i) => titles.indexOf(t) !== i);
+
+  const topSlowest = [...results]
+    .sort((a, b) => b.duration - a.duration)
+    .slice(0, 5);
+
+  return { grouped, duplicates: [...new Set(duplicates)], topSlowest };
+}`,
+          py: `from collections import defaultdict, Counter
+from pathlib import Path
+
+def group_by_suite(results):
+    grouped = defaultdict(lambda: {'passed': 0, 'failed': 0, 'tests': []})
+
+    for r in results:
+        key = Path(r['file']).parent.name or 'root'
+        grouped[key][r['status']] += 1
+        grouped[key]['tests'].append(r)
+
+    seen = Counter(r['title'] for r in results)
+    duplicates = [t for t, n in seen.items() if n > 1]
+    top_slowest = sorted(results, key=lambda r: r['duration'], reverse=True)[:5]
+
+    return dict(grouped), duplicates, top_slowest`
+        }
+      },
+      {
+        id: 'm2-equality', title: 'Deep equality & a custom assertion', tags: ['assert', 'diff'],
+        detail: 'Write a deepEqual that handles primitives, arrays, plain objects, Date / RegExp, NaN and circular references, then produce a diff-friendly error message. This is a favourite because it reveals how carefully you think about test output.',
+        bullets: [
+          'Why JSON.stringify fails: key order, undefined keys, Dates serialised as strings, no circular support.',
+          'Explain Object.is for NaN, and the identity WeakMap used to break reference cycles.',
+          'The real deliverable is the failure message \u2014 a minimal diff is what makes a test useful.'
+        ],
+        code: {
+          js: `function deepEqual(a, b, seen = new WeakMap()) {
+  if (Object.is(a, b)) return true;                 // covers NaN and +0 / -0
+  if (a === null || b === null) return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof RegExp && b instanceof RegExp) {
+    return a.source === b.source && a.flags === b.flags;
+  }
+
+  if (seen.has(a)) return seen.get(a) === b;        // circular reference guard
+  seen.set(a, b);
+
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+
+  return ka.every(k =>
+    Object.prototype.hasOwnProperty.call(b, k) && deepEqual(a[k], b[k], seen)
+  );
+}
+
+// Custom assertion with a readable failure message
+function expectEqual(actual, expected) {
+  if (!deepEqual(actual, expected)) {
+    throw new Error('Expected ' + JSON.stringify(expected) +
+                    ' but received ' + JSON.stringify(actual));
+  }
+}`,
+          py: `import math
+
+def deep_equal(a, b):
+    if a is b:
+        return True
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, float) and math.isnan(a):
+        return isinstance(b, float) and math.isnan(b)
+    if isinstance(a, (str, int, float, bool, type(None))):
+        return a == b
+    if isinstance(a, (list, tuple)):
+        return len(a) == len(b) and all(deep_equal(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(deep_equal(v, b[k]) for k, v in a.items())
+    if isinstance(a, (set, frozenset)):
+        return a == b
+    return False    # unknown types: fall back to identity`
+        }
+      }
+    ]
+  },
+  {
+    name: 'Build the machinery',
+    hint: 'Writing a test runner proves you understand what a framework silently does for you.',
+    items: [
+      {
+        id: 'm2-runner', title: 'Build a minimal custom test runner', tags: ['async', 'hooks', 'CI exit code'],
+        detail: 'Implement describe / it with async support, per-test timing, a result report and a non-zero exit code for CI. The interesting parts are the context stack that builds test names, awaiting the test function, capturing the error and continuing instead of aborting, and the process exit contract.',
+        bullets: [
+          'Name hierarchy: push and pop a prefix as describe blocks nest.',
+          'Never let one failure kill the run \u2014 catch, record, continue.',
+          'process.exitCode = 1 (JS) or sys.exit(1) (Python) is what actually fails the CI job.',
+          'Follow-up: add beforeAll / afterAll semantics and why beforeEach must re-run per test.'
+        ],
+        code: {
+          js: `const registry = [];
+let prefix = '';
+
+const describe = (name, body) => {
+  const parent = prefix;
+  prefix = parent ? parent + ' > ' + name : name;   // context stack
+  body();
+  prefix = parent;
+};
+
+const it = (name, fn) => registry.push({ title: prefix + ' > ' + name, fn });
+
+async function run({ retries = 0 } = {}) {
+  const results = [];
+
+  for (const test of registry) {
+    const started = Date.now();
+    let attempt = 0;
+    let error = null;
+
+    while (true) {
+      attempt++;
+      try {
+        await test.fn();
+        error = null;
+        break;
+      } catch (err) {
+        error = err;
+        if (attempt > retries) break;               // record, then keep going
+      }
+    }
+
+    results.push({
+      title: test.title,
+      status: error ? 'failed' : 'passed',
+      error: error ? error.message : null,
+      attempts: attempt,
+      ms: Date.now() - started
+    });
+  }
+
+  console.table(results);
+  process.exitCode = results.some(r => r.status === 'failed') ? 1 : 0;
+  return results;
+}`,
+          py: `import asyncio, time
+
+_TESTS = []
+_CTX = {'prefix': ''}
+
+def describe(name, body):
+    parent = _CTX['prefix']
+    _CTX['prefix'] = f'{parent} > {name}' if parent else name
+    body()
+    _CTX['prefix'] = parent
+
+def it(name, fn):
+    _TESTS.append((_CTX['prefix'] + ' > ' + name, fn))
+
+async def run(retries: int = 0):
+    results = []
+
+    for title, fn in _TESTS:
+        started = time.perf_counter()
+        attempt, error = 0, None
+
+        while True:
+            attempt += 1
+            try:
+                maybe = fn()
+                if asyncio.iscoroutine(maybe):
+                    await maybe
+                error = None
+                break
+            except Exception as exc:                # a failure must not abort the run
+                error = exc
+                if attempt > retries:
+                    break
+
+        results.append({
+            'title': title,
+            'status': 'failed' if error else 'passed',
+            'error': str(error) if error else None,
+            'attempts': attempt,
+            'ms': round((time.perf_counter() - started) * 1000, 2),
+        })
+
+    return results`
+        }
+      },
+      {
+        id: 'm2-retry', title: 'Retry with exponential backoff & jitter', tags: ['backoff', 'resilience'],
+        detail: 'Almost every automation question eventually becomes "make this resilient without hiding bugs". Implement bounded retries, exponential growth, jitter, a total deadline budget, and rethrow the last error together with its attempt history.',
+        bullets: [
+          'Jitter matters: without it, N retrying clients all wake up at the same instant (thundering herd).',
+          'Attach the full attempt history to the final error \u2014 a bare "failed after 3 tries" is useless.',
+          'When NOT to retry: assertions, non-idempotent operations, and anything that would turn a real defect green.'
+        ],
+        code: {
+          js: `async function withRetry(fn, opts = {}) {
+  const { retries = 3, base = 250, factor = 2, jitter = true, deadline = 8000 } = opts;
+  const started = Date.now();
+  const history = [];
+
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (err) {
+      if (attempt > retries) {
+        err.attempts = history;                     // keep the evidence
+        throw err;
+      }
+
+      const exp = base * Math.pow(factor, attempt - 1);
+      const delay = jitter ? exp * (0.5 + Math.random() * 0.5) : exp;
+
+      if (Date.now() - started + delay > deadline) {
+        err.attempts = history;
+        err.reason = 'retry budget exhausted';
+        throw err;
+      }
+
+      history.push({ attempt, error: err.message, delay });
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}`,
+          py: `import functools, random, time
+
+def with_retry(retries=3, base=0.25, factor=2, jitter=True, deadline=8.0):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            started, history = time.monotonic(), []
+
+            for attempt in range(1, retries + 2):
+                try:
+                    return fn(*args, **kwargs)
+                except Exception as exc:
+                    if attempt > retries:
+                        exc.attempts = history
+                        raise
+
+                    exp = base * (factor ** (attempt - 1))
+                    delay = exp * random.uniform(0.5, 1.0) if jitter else exp
+
+                    if time.monotonic() - started + delay > deadline:
+                        exc.attempts = history
+                        raise
+
+                    history.append({'attempt': attempt, 'error': str(exc), 'delay': delay})
+                    time.sleep(delay)
+
+        return wrapper
+    return decorator`
+        }
+      },
+      {
+        id: 'm2-pool', title: 'Concurrency limiter / test pool', tags: ['Promise pool', 'Semaphore'],
+        detail: 'Run at most N tasks at once while preserving result order. Two clean patterns: a fixed pool of workers pulling from a shared cursor, or a semaphore wrapping Promise.all / gather. Then relate it back to browser workers in a test suite.',
+        bullets: [
+          'Why naive Promise.all on 5,000 requests melts the machine, and why chunking breaks the tail latency.',
+          'Order preservation: write results into a pre-sized array by index, not by completion order.',
+          'Python equivalent: asyncio.Semaphore around gather, or anyio TaskGroup with a limiter.'
+        ],
+        code: {
+          js: `async function pool(tasks, limit = 4) {
+  const results = new Array(tasks.length);
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < tasks.length) {
+      const index = cursor++;                        // single shared cursor
+      results[index] = await tasks[index]();         // order preserved by index
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, tasks.length) }, worker)
+  );
+
+  return results;
+}
+
+// usage: pool(urls.map(u => () => fetch(u)), 8)`,
+          py: `import asyncio
+
+async def pool(tasks, limit: int = 4):
+    semaphore = asyncio.Semaphore(limit)
+    results = [None] * len(tasks)
+
+    async def run(index, task):
+        async with semaphore:                        # at most N tasks in flight
+            results[index] = await task()
+
+    await asyncio.gather(*(run(i, t) for i, t in enumerate(tasks)))
+    return results`
+        }
+      }
+    ]
+  },
+  {
+    name: 'Test-quality utilities',
+    hint: 'Utilities you will actually be asked to write, plus how you would test them.',
+    items: [
+      {
+        id: 'm2-debounce', title: 'Debounce & throttle (and testing them)', tags: ['fake timers', 'determinism'],
+        detail: 'Debounce delays until the quiet period; throttle fires on a leading and trailing edge at a bounded rate. Implement both, then unit test them with fake timers \u2014 which itself is a strong follow-up about deterministic time in tests.',
+        bullets: [
+          'jest.useFakeTimers() + advanceTimersByTime(), or Python freezegun / unittest.mock.patch on time.',
+          'Always expose a .cancel() so a test (or an unmount) can clean up.',
+          'Explain why sleeping for real in a test is a flakiness source and a CI time tax.'
+        ],
+        code: {
+          js: `function debounce(fn, wait = 300) {
+  let timer = null;
+  const wrapped = (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+  wrapped.cancel = () => clearTimeout(timer);
+  return wrapped;
+}
+
+function throttle(fn, limit = 200) {
+  let waiting = false, queued = null;
+  return (...args) => {
+    if (waiting) { queued = args; return; }          // remember the trailing call
+    fn(...args);
+    waiting = true;
+    setTimeout(() => {
+      waiting = false;
+      if (queued) { fn(...queued); queued = null; }
+    }, limit);
+  };
+}
+
+// Deterministic test - no real waiting
+test('debounces rapid keystrokes into one search', () => {
+  jest.useFakeTimers();
+  const search = jest.fn();
+  const debounced = debounce(search, 300);
+
+  debounced('a'); debounced('ab'); debounced('abc');
+  jest.advanceTimersByTime(299);
+  expect(search).not.toHaveBeenCalled();
+
+  jest.advanceTimersByTime(1);
+  expect(search).toHaveBeenCalledTimes(1);
+  expect(search).toHaveBeenCalledWith('abc');
+});`,
+          py: `import threading
+
+def debounce(wait=0.3):
+    def decorator(fn):
+        timer = None
+
+        def wrapper(*args, **kwargs):
+            nonlocal timer
+            if timer is not None:
+                timer.cancel()
+            timer = threading.Timer(wait, lambda: fn(*args, **kwargs))
+            timer.daemon = True
+            timer.start()
+
+        wrapper.cancel = lambda: timer and timer.cancel()
+        return wrapper
+    return decorator
+
+# Deterministic test: control the clock instead of sleeping in the test
+from unittest.mock import patch, MagicMock
+
+def test_debounce_fires_once_after_the_quiet_period():
+    calls = []
+
+    with patch('threading.Timer') as Timer:
+        debounced = debounce(0.3)(calls.append)
+
+        debounced('a'); debounced('ab'); debounced('abc')
+
+        assert Timer.call_count == 3              # each keystroke resets the timer
+        assert Timer.return_value.cancel.call_count == 2
+        assert calls == []                        # nothing has fired yet
+
+        Timer.return_value.call_args[0][0]()      # run the scheduled callback
+        assert calls == ['abc']`
+        }
+      },
+      {
+        id: 'm2-tags', title: 'Design a tagging & selection engine', tags: ['selectors', 'CLI'],
+        detail: 'Given a suite of 3,000 tests tagged by feature, risk and speed, design the API that answers "run the money-path smoke tests for the payments service in parallel on WebKit". This is a design question dressed as a coding question.',
+        bullets: [
+          'Model tags as a small DSL: @smoke, @payments, -@slow, and( @api | @ui ).',
+          'Compile the query once, evaluate with a fast set intersection rather than string matching per test.',
+          'Discuss deterministic ordering, seed-based sharding and how the selection feeds the CI matrix.'
+        ],
+        code: {
+          js: `// tags: ['smoke', 'payments', 'api']  query: 'smoke AND (payments OR checkout) AND NOT slow'
+function compile(query) {
+  const tokens = query
+    .replace(/\\b(AND|OR|NOT)\\b/g, ' $1 ')
+    .trim().split(/\\s+/)
+    .filter(Boolean)
+    .map(t => /^(AND|OR|NOT)$/.test(t) ? { type: t } : { type: 'tag', value: t.toLowerCase() });
+
+  const parseOr = (toks, i) => { /* returns [node, nextIndex] */ };
+  return toks => evaluate(parseOr(tokens, 0)[0], toks);
+}
+
+function matches(test, query) {
+  const active = new Set(test.tags.map(t => t.toLowerCase()));
+  return compile(query)(active);
+}`,
+          py: `from dataclasses import dataclass, field
+from typing import Callable
+
+@dataclass(frozen=True)
+class Test:
+    id: str
+    tags: frozenset = field(default_factory=frozenset)
+
+def matches(test: Test, expr: str) -> bool:
+    """Very small evaluator: supports 'tag', 'A AND B', 'A OR B', 'NOT A'."""
+    tokens = expr.replace('(', ' ( ').replace(')', ' ) ').split()
+    pos = 0
+
+    def peek():
+        return tokens[pos] if pos < len(tokens) else None
+
+    def parse_or():
+        nonlocal pos
+        node = parse_and()
+        while peek() == 'OR':
+            pos += 1
+            left, node = node, parse_and()
+            node = ('or', left, node)
+        return node
+
+    def parse_and():
+        nonlocal pos
+        node = parse_atom()
+        while peek() == 'AND':
+            pos += 1
+            left, node = node, parse_atom()
+            node = ('and', left, node)
+        return node
+
+    def parse_atom():
+        nonlocal pos
+        token = tokens[pos]; pos += 1
+        if token == 'NOT':
+            return ('not', parse_atom())
+        if token == '(':
+            node = parse_or(); pos += 1     # consume ')'
+            return node
+        return ('tag', token.lower())
+
+    def evaluate(node):
+        kind = node[0]
+        if kind == 'tag':
+            return node[1] in test.tags
+        if kind == 'not':
+            return not evaluate(node[1])
+        if kind == 'and':
+            return evaluate(node[1]) and evaluate(node[2])
+        return evaluate(node[1]) or evaluate(node[2])
+
+    return evaluate(parse_or())`
+        }
+      }
+    ]
+  }
+];
+
+const M3 = [
+  {
+    name: 'Quality ownership',
+    hint: 'Structure every answer as Situation \u2192 Task \u2192 Action \u2192 Result, quantify the Result, and never blame an individual.',
+    items: [
+      {
+        id: 'm3-prodbug', title: 'Handling a production bug that escaped automation', tags: ['Incident', 'RCA'],
+        detail: 'Senior interviewers probe ownership under pressure. Show that you contain first, diagnose second, and fix the system rather than the symptom.',
+        star: {
+          situation: 'A defect reached production in a checkout flow our suite explicitly covered; support volume spiked within the first hour of the release.',
+          task: 'Contain the impact, establish why automation missed it, and prevent recurrence without slowing the release train.',
+          action: 'I joined the incident bridge as QA lead, provided a regression scope and a manual verification checklist within 20 minutes, and validated the hotfix behind a feature flag. In the blameless RCA I traced the bug to a state only reachable with an expired discount session \u2014 a data condition our fixtures never created. We added a contract test at the service boundary, a synthetic canary on the critical path, and fixture factories covering expired and overlapping promotions.',
+          result: 'Hotfix verified and the flag rolled back within the hour. MTTR on the next comparable incident fell from roughly 6 hours to 45 minutes, and escaped defects in checkout dropped to zero for two consecutive quarters.'
+        },
+        watch: 'No blaming the developer. Concrete artefacts, a measurable outcome, and a system-level fix instead of "we will test more".'
+      },
+      {
+        id: 'm3-deadline', title: 'Pushing back on a tight deadline', tags: ['Negotiation', 'Risk'],
+        detail: 'They want evidence that you can protect quality and the business at the same time. Reframe from "how much testing" to "what risk are we accepting".',
+        star: {
+          situation: 'One week before a feature freeze, the PM proposed adding a full end-to-end regression pass to a release already compressed to four days.',
+          task: 'Say no to scope that would put the date at risk \u2014 or find a way to say yes safely.',
+          action: 'I reframed the discussion around accepted risk rather than effort. I split the pass into a 40-test P0 smoke set covering money paths (already automated, about 8 minutes) and a tagged P1 set for the nightly run, presented a risk matrix highlighting the two highest-severity untested paths, and proposed a feature-flagged rollout with a 10% canary and a documented rollback plan.',
+          result: 'We shipped on time with P0 coverage on every merge. One P1 defect was caught by the canary before full rollout and reverted with no customer impact. The risk-acceptance template became standard practice for compressed releases.'
+        },
+        watch: 'Data over dogma, business-aware negotiation, an explicit trade-off written down, and a follow-up that removes the same pressure next time.'
+      },
+      {
+        id: 'm3-missing', title: 'Mentoring junior QAs & spreading ownership', tags: ['Mentoring', 'Levelling'],
+        detail: 'Leadership at senior level means multiplying yourself. Demonstrate structure, cadence and evidence of growth in other people.',
+        star: {
+          situation: 'Two junior QAs joined a team where all automation knowledge sat with one engineer; code reviews were a bottleneck and PR feedback took days.',
+          task: 'Grow their autonomy and distribute ownership of the suite without dropping quality.',
+          action: 'I built a six-week ramp: week 1 pair-written smoke tests, week 2 debugging a real flaky test, weeks 3\u20134 owning a feature area end to end, week 5 writing a design doc, week 6 presenting to the team. Alongside it I ran a weekly 30-minute 1:1, wrote a style guide with worked examples of good locators and naming, introduced a "you build it, you review it" rotation, and committed to feedback within 24 hours.',
+          result: 'Both were shipping automation independently by week 5. Review turnaround dropped from three days to under one, and one of them later rebuilt our reporting setup. I personally learned to document decisions, not just code.'
+        },
+        watch: 'A structured ramp with milestones, psychological safety, a feedback loop, and outcomes measured in other people\u2019s growth.'
+      },
+      {
+        id: 'm3-strategy', title: 'Defining a test strategy from scratch', tags: ['Strategy', 'Stakeholders'],
+        detail: 'The highest-value senior question. Start from risk and business impact, not from a coverage percentage.',
+        star: {
+          situation: 'A greenfield B2B product had no test suite, a four-person team shipping weekly, and quality owned by nobody.',
+          task: 'Define and land a pragmatic test strategy the team would actually follow.',
+          action: 'I started from risk, not coverage: mapped critical user journeys and their business impact, agreed a testing pyramid with the tech lead (fast unit and contract tests as the base, focused integration, a thin E2E layer on money paths), and defined entry and exit criteria plus a Definition of Done that required testability changes alongside each feature. I instrumented CI with a PR smoke gate and a nightly regression, chose Playwright with page objects only where flows genuinely repeated, and set up Allure reporting with an explicit flake budget.',
+          result: 'PR feedback stayed under 10 minutes while the suite grew to about 450 tests at a 98.7% pass rate, and we caught a data-migration defect pre-release that would have cost six figures.'
+        },
+        watch: 'Risk-first framing, stakeholder buy-in, measurable gates, and \u2014 critically \u2014 what you deliberately chose not to automate.'
+      },
+      {
+        id: 'm3-flakytrust', title: 'Rebuilding trust in a chronically flaky suite', tags: ['Flakiness', 'Change management'],
+        detail: 'A flaky suite is a cultural problem as much as a technical one. Interviewers look for a freeze, a classification, and a published number.',
+        star: {
+          situation: 'Our nightly end-to-end job failed on roughly 18% of runs; the team had started re-running it manually and ignoring red builds.',
+          task: 'Restore signal so that a red build means something again.',
+          action: 'I froze new E2E merges, instrumented every failure with a trace and a classification label, and triaged 90 days of history: 60% were unawaited network races, 25% shared test-data collisions, 15% genuine defects. We replaced time-based waits with web-first assertions, moved data to per-test factories, isolated parallel contexts, quarantined 12 tests into a nightly job with a named owner and a fix-by date, and published a weekly flake report.',
+          result: 'Flake rate fell from 18% to under 1% in five weeks, manual re-runs stopped entirely, and the quarantine gate prevented new flakies from silently re-entering the merge pipeline.'
+        },
+        watch: 'A freeze to stop the bleeding, historical evidence, classification percentages, and a permanent guardrail rather than a one-off clean-up.'
+      },
+      {
+        id: 'm3-conflict', title: 'Disagreeing with a developer or PM', tags: ['Influence', 'ADRs'],
+        detail: 'They are testing influence without authority. Bring evidence, time-box the debate, and record the decision.',
+        star: {
+          situation: 'A developer proposed asserting a validation rule at the UI layer when the API already enforced it; I believed this duplicated coverage and slowed the suite.',
+          task: 'Reach a decision quickly without damaging the relationship or the release.',
+          action: 'I made the case with numbers \u2014 roughly 400ms per test across a three-browser matrix versus a 12ms service assertion \u2014 and proposed a principle: assert at the highest layer that owns the behaviour, plus one E2E check that the error surfaces correctly to the user. We time-boxed the discussion to 30 minutes, wrote it up as ADR-014, and agreed to revisit it if the UI layer diverged.',
+          result: 'The suite became about 16 seconds faster per browser, the principle ended three recurring debates, and Architecture Decision Records became our default mechanism for test-design disagreements.'
+        },
+        watch: 'Evidence rather than opinion, a reusable principle, a documented decision, and visible respect for the other person\u2019s reasoning.'
+      }
+    ]
+  },
+  {
+    name: 'Delivery & collaboration',
+    hint: 'Expect at least one question per area. Rehearse the numbers so they sound like memory, not preparation.',
+    items: [
+      {
+        id: 'm3-onboarding', title: 'Onboarding a new team to automation', tags: ['Adoption', 'Influence'],
+        detail: 'Shows you can enter a low-maturity environment and create momentum without a mandate.',
+        star: {
+          situation: 'I joined a team delivering fortnightly with a regression cycle that took a tester three days manually and was skipped under pressure.',
+          task: 'Introduce automation that the engineers would maintain, without disrupting delivery.',
+          action: 'I picked the ten highest-risk journeys by defect history, automated them at the API layer first for speed and stability, and only then added four thin E2E checks. I paired with two engineers on the first PRs, added a failing-test demo to the definition of done, and made the pipeline post a readable summary on every pull request so quality became visible in the normal workflow.',
+          result: 'The three-day regression became a 12-minute pipeline within six weeks, engineers wrote more than half of the new tests themselves, and the team stopped skipping regression entirely.'
+        },
+        watch: 'Choosing a high-leverage entry point, pairing rather than throwing code over the wall, and adoption measured by who writes the tests.'
+      },
+      {
+        id: 'm3-qualitymetrics', title: 'Explaining quality metrics to leadership', tags: ['Metrics', 'Communication'],
+        detail: 'Tests whether you can translate engineering signal into a business conversation.',
+        star: {
+          situation: 'After two consecutive releases with customer-visible defects, leadership asked for a single number that represented quality.',
+          task: 'Provide a credible measure without gaming it, and drive a decision from it.',
+          action: 'I resisted a composite score and instead presented a small dashboard: escaped defects by severity, mean time to detect and repair, flake rate, pipeline lead time and rollback rate, each with a trend line and an owner. I paired every metric with a qualitative note from support themes so it could not be read in isolation, and proposed one change per quarter rather than a transformation programme.',
+          result: 'Escaped high-severity defects fell from four per release to an average of one over the next two quarters, and the monthly quality review replaced the blame-oriented post-release audit.'
+        },
+        watch: 'Refusing vanity metrics, trends over snapshots, owning the narrative with context, and connecting quality to customer impact.'
+      },
+      {
+        id: 'm3-deadline2', title: 'When quality and velocity genuinely conflict', tags: ['Trade-offs', 'Judgement'],
+        detail: 'A judgement question. The best answers make the trade-off explicit and reversible.',
+        star: {
+          situation: 'A strategic partner deadline required a release we estimated needed two more weeks of hardening.',
+          task: 'Enable the date while keeping the risk visible and recoverable.',
+          action: 'I produced a one-page risk register ranking every untested area by likelihood and impact, proposed scope cuts that removed the riskiest features rather than the testing, and defined a staged rollout: partner-only flag, synthetic monitoring on the critical path, and an explicit rollback threshold agreed with engineering and product. I documented the accepted risks and who accepted them.',
+          result: 'The release shipped on the partner date with the risky features scoped out, no severity-1 issues in the first month, and the rollback threshold was exercised successfully once without customer impact.'
+        },
+        watch: 'Named risk owners, cutting scope instead of verification, a defined rollback trigger, and no silent acceptance of risk.'
+      },
+      {
+        id: 'm3-crossfunctional', title: 'Working with developers who resist testing', tags: ['Influence', 'Collaboration'],
+        detail: 'Addresses the "testability is not my job" objection in a way that earns respect.',
+        star: {
+          situation: 'Two squads treated automated tests as a QA deliverable, so bugs that needed a seam in the code were repeatedly deferred.',
+          task: 'Change the shared expectation without escalating it into a process mandate.',
+          action: 'I stopped opening tickets and started pairing: for three sprints I sat in refinement and estimated testability changes alongside feature work, then showed the cost of the alternative using two escaped defects and their support load. We introduced a lightweight rule that every story names how it will be verified, and I volunteered to write the first tests for each new service so the pattern existed before anyone argued about it.',
+          result: 'Testability changes appeared in an estimated 90% of new stories within a quarter, automation PRs from engineers outnumbered mine, and the two squads stopped deferring verification work.'
+        },
+        watch: 'Influence through pairing and evidence rather than escalation, and changing a default instead of adding a rule.'
+      }
+    ]
+  }
+];
+
+const QUESTIONS = [
+  {
+    id: 'q1', tags: ['Flakiness', 'Triage'],
+    q: 'A test fails once every twenty runs in CI but always passes locally. How do you triage it?',
+    a: 'I treat it as a defect in the test or the environment, never as noise. First I reproduce under CI conditions \u2014 same container, same parallelism, same data \u2014 then I classify: timing or missing awaits, shared or non-deterministic test data, environment capacity, or a genuine race in the application. I compare the trace and logs of a passing run against a failing one rather than guessing, quarantine the test so it stops blocking merges, and assign a root-cause SLA with a named owner. The fix has to remove the uncertainty: condition-based waits instead of sleeps, per-test data factories, or serialising a genuinely order-dependent test. Finally I track the flake rate until it holds below 0.5% for several consecutive weeks before the test returns to the merge gate.'
+  },
+  {
+    id: 'q2', tags: ['Selenium', 'Protocols'],
+    q: 'What is the practical difference between Selenium\u2019s JSON Wire Protocol and W3C WebDriver?',
+    a: 'JSON Wire was the community de-facto standard used by Selenium 1 to 3; W3C WebDriver is the formal specification Selenium 4 adopted. The visible differences are capability handling \u2014 alwaysMatch and firstMatch instead of a flat capability object \u2014 removal of legacy endpoints such as /session/:id/timeouts/implicit_wait, and stricter serialisation of the actions API. In practice this means more consistent behaviour across browser vendors and a clean path to WebDriver BiDi for bidirectional features like network interception and console logs. It also explains most upgrade breakages: a capability that used to be silently ignored is now rejected if it is not namespaced correctly.'
+  },
+  {
+    id: 'q3', tags: ['Playwright', 'Cypress', 'Tooling'],
+    q: 'When would you choose Playwright over Cypress \u2014 and when wouldn\u2019t you?',
+    a: 'I would choose Playwright for genuine multi-tab and multi-origin flows, isolated contexts that make parallelism trivial, a broader browser footprint including WebKit, first-class API testing, and built-in tracing and sharding. I would stay on Cypress if the team already invests in its component testing and runner experience, or if the application is single-origin and the team values its time-travel debugging and shallow setup cost. The decision is normally about the shape of the application and team familiarity rather than a feature checklist \u2014 and I would want us to record the reasoning so we do not relitigate it in six months.'
+  },
+  {
+    id: 'q4', tags: ['Architecture', 'Microservices'],
+    q: 'How do you design a test pyramid for a microservices platform?',
+    a: 'I keep the bulk at the service layer: fast unit tests inside each service, plus consumer-driven contract tests so integration drift fails the provider build rather than a fragile end-to-end run. A small number of API integration tests cover cross-cutting concerns such as authorisation, transactions and migrations. Only the critical money paths get full end-to-end coverage through the real gateway. I add event-driven verification alongside the HTTP tests, because in a message-based system most failures hide in the event contract rather than the request-response path, and I would treat a broken contract test as a release blocker.'
+  },
+  {
+    id: 'q5', tags: ['Playwright', 'Design'],
+    q: 'What is the risk of relying on auto-waiting in Playwright or Cypress?',
+    a: 'Auto-waiting removes a whole class of timing failures, but it can hide real defects: a button that becomes interactive 400ms late looks identical to one that is correct, so the test passes while the experience is broken. It also masks missing loading states and race conditions the application should handle itself. I mitigate by asserting on explicit user-facing conditions rather than relying only on implicit actionability, keeping timeouts short enough that a regression is still noticeable, and adding deliberate assertions on loading, disabled and error states wherever timing is part of the requirement.'
+  },
+  {
+    id: 'q6', tags: ['Test design', 'Time'],
+    q: 'How do you test a system that depends on time \u2014 retries, TTLs, scheduled jobs?',
+    a: 'I separate the clock from the system under test. The preferred option is dependency-injecting a clock or time provider so tests can advance time instantly; where that is impossible I use a time-freezing library such as freezegun or Sinon fake timers, or set timestamps directly in the database. For scheduled jobs I invoke the job with an explicit timestamp instead of waiting for the scheduler, and I deliberately test the boundaries: leap days, DST transitions and overlaps, midnight in different time zones, and clock skew between services. Waiting in real time for a timer is a last resort, never the default.'
+  },
+  {
+    id: 'q7', tags: ['Contract testing', 'Strategy'],
+    q: 'Explain contract testing and where it sits relative to end-to-end tests.',
+    a: 'Contract testing verifies that a consumer\u2019s expectations of a provider \u2014 request shapes, response fields, status codes, error semantics \u2014 still hold, without standing up the whole system. A consumer-driven contract is generated on the consumer side and verified inside the provider\u2019s pipeline, so a breaking change fails the provider\u2019s build instead of surfacing days later in end-to-end testing. It sits between unit and end-to-end in the pyramid: far cheaper and more stable than full end-to-end, far more meaningful than mocking every collaborator. End-to-end tests then only need to prove the wiring is correct, not re-verify every field.'
+  },
+  {
+    id: 'q8', tags: ['API', 'Payments'],
+    q: 'How would you verify that a payment endpoint is idempotent?',
+    a: 'I would send the same request \u2014 identical idempotency key and payload \u2014 several times, including concurrently and again after a delay, and assert that exactly one charge is created while every call returns the same charge identifier. Then I would probe the edges: the same key with a different payload should be rejected or clearly distinguished, a key reused after the retention window should behave exactly as documented, and a retry after a simulated timeout must not double-charge. I would also assert on the ledger and webhook side effects, because double-charge defects usually live there rather than in the HTTP response.'
+  },
+  {
+    id: 'q9', tags: ['Fundamentals', 'Test doubles'],
+    q: 'What is the difference between mocking, stubbing and faking?',
+    a: 'A stub returns canned responses and asserts nothing \u2014 it answers "what does the collaborator return". A mock carries expectations and fails the test if an interaction did not happen with the expected arguments \u2014 it answers "was this called, and how". A fake is a working but lightweight implementation, such as an in-memory database standing in for a real one. My rule is to prefer real dependencies until they are genuinely slow, non-deterministic or external, because over-mocking produces a suite that proves your mocks work rather than that your software works.'
+  },
+  {
+    id: 'q10', tags: ['Parallelism', 'CI'],
+    q: 'What typically breaks when you parallelise a test suite?',
+    a: 'Shared mutable state is the usual culprit: one database, a single seeded user, or a screenshot written to a well-known path. Next is timing under load \u2014 something that passes on one worker times out on eight. Then ordering assumptions, port or browser-instance collisions, and global fixtures that assume serial execution. I fix them with per-test data factories carrying a run-scoped identifier, isolated browser contexts, containerised or in-memory dependencies, and by removing any test that depends on having run before another. Before enabling parallelism I run the suite twice in the same job to expose hidden ordering dependencies.'
+  },
+  {
+    id: 'q11', tags: ['Visual testing', 'Stability'],
+    q: 'How do you approach visual regression testing?',
+    a: 'First I make rendering deterministic: fixed viewport and device scale, bundled fonts, animations disabled, and dynamic regions such as timestamps and avatars masked. Then I choose an intentional tolerance \u2014 a pixel diff threshold with anti-aliasing compensation \u2014 because zero tolerance produces noise that nobody reads. I scope it to a handful of high-value components rather than whole pages, and I require a human to approve changes in a review tool so a legitimate UI update becomes a reviewed pull request instead of a tolerated failure. Without that approval step the suite either blocks every design change or gets switched off.'
+  },
+  {
+    id: 'q12', tags: ['Metrics', 'Leadership'],
+    q: 'How do you measure quality beyond pass rate?',
+    a: 'Pass rate is close to meaningless in isolation, because a suite that asserts nothing passes 100% of the time. I look at escaped defects weighted by severity, mean time to detect and repair, flake rate and quarantine size, mutation score or assertion strength where it is practical, the phase in which defects are found, pipeline lead time, and production signals such as rollback rate and MTTR. I pair those with qualitative inputs \u2014 exploratory testing notes and themes from support tickets \u2014 because the metrics worth tracking are the ones that actually change a decision.'
+  },
+  {
+    id: 'q13', tags: ['Test data', 'Environments'],
+    q: 'How do you manage test data in a shared staging environment?',
+    a: 'I assume the environment is hostile. Every test creates the data it needs through a public API or a seeded factory, scoped by a unique run identifier, and either cleans itself up or expires automatically. Nothing depends on another test having run, on a golden record, or on data a different team can mutate. Where fixtures are large or expensive I use a read-only snapshot with a per-test overlay, and I keep dedicated environments for true end-to-end and performance runs. If an environment cannot support that, the correct answer is a new environment, not a serialised test suite.'
+  },
+  {
+    id: 'q14', tags: ['Auth', 'Performance'],
+    q: 'How do you handle authentication efficiently across a large end-to-end suite?',
+    a: 'Never log in per test. I authenticate once per worker and persist the result \u2014 Playwright storage state or Cypress cy.session \u2014 then reuse it across tests, refreshing when the token expires. Roles are captured as separate storage states, so a permission test is a fixture swap rather than a login flow. Tests that mutate session state get a genuinely isolated context, and I keep exactly one dedicated test for the login flow itself so a regression there is obvious rather than distributed across the suite.'
+  },
+  {
+    id: 'q15', tags: ['Retries', 'Policy'],
+    q: 'When is auto-retry acceptable?',
+    a: 'Retries are acceptable for diagnosing flakiness and for absorbing a known, documented environmental blip. They are never acceptable for turning a failed assertion into a green merge. I allow a small bounded retry in CI, always report the attempt count and record the flake, disable retries while actively fixing a test, and never retry locally during development. The moment the retry rate climbs it becomes a tracked issue with an owner, because a suite that passes on the second attempt is telling you that the first answer was the truth.'
+  },
+  {
+    id: 'q16', tags: ['Mobile', 'CI design'],
+    q: 'How would you automate a mobile app alongside web in one pipeline?',
+    a: 'I keep them in the same pipeline but in separate stages with separate toolchains: Playwright or WebdriverIO for web, Appium with the native drivers for iOS and Android, sharing only data factories, reporting and CI orchestration. Business rules are verified once at the API layer instead of being re-tested on every client. In practice I run web on every pull request, a mobile smoke set on emulators at merge, and reserve a small device-cloud matrix for the nightly run, so the pull-request feedback loop stays fast while coverage still expands.'
+  },
+  {
+    id: 'q17', tags: ['AI', 'Emerging'],
+    q: 'How do you test an AI or LLM-driven feature?',
+    a: 'I separate the deterministic surface from the non-deterministic one. Inputs, tool calls, prompt templates, guardrails and error handling are tested deterministically with fixed seeds and recorded responses. Output quality is assessed offline against a curated golden dataset using an explicit rubric \u2014 LLM-as-judge or human review \u2014 scored across many samples rather than asserted on a single generation. I also test refusal behaviour, prompt-injection handling, latency and cost budgets, and I run a small canary set in production with automatic rollback when the scores drift.'
+  },
+  {
+    id: 'q18', tags: ['Judgement', 'Strategy'],
+    q: 'How do you decide what not to automate?',
+    a: 'I automate what is stable, high-value and repetitive: critical journeys, regression-prone logic, and anything we execute frequently. I deliberately skip one-off exploratory work, UI that changes weekly with no regression history, exhaustive cross-browser matrices, and tests whose lifetime maintenance cost exceeds the defect cost they would catch. I make that decision explicit with a short risk-and-ROI note in the strategy document, and I revisit it each quarter so a test we no longer need gets deleted rather than limping on as maintenance debt.'
+  },
+  {
+    id: 'q19', tags: ['CI', 'Fundamentals'],
+    q: 'What is the difference between sharding and parallel execution?',
+    a: 'Parallel execution is concurrency inside a single run \u2014 a worker pool distributing tests across the slots available on one machine. Sharding splits the suite into independent subsets executed as separate CI jobs or containers whose results are merged. Playwright with --shard=1/4 and Jest with --shard are sharding; --workers and Mocha --parallel are parallelism. Sharding cuts wall-clock time across a distributed fleet but requires stable ordering and reliable result merging, while parallelism is simpler but bounded by a single machine.'
+  },
+  {
+    id: 'q20', tags: ['Fundamentals', 'Terminology'],
+    q: 'What is the difference between a test case, a test scenario and a test suite?',
+    a: 'A test scenario describes what needs to be verified in business terms, such as "a user can recover a forgotten password". A test case is the concrete, step-by-step execution of that scenario with preconditions, data and expected results. A suite is an organised collection of cases, typically scoped by feature, risk or execution frequency \u2014 smoke, regression, nightly. In an automation context I map scenarios to descriptive test titles, cases to parameterised examples, and suites to CI jobs or tags, which keeps the vocabulary consistent between manual and automated work.'
+  }
+];
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORE_KEY = 'senior-qa-prep-hub.v1';
+
+const ICONS = {
+  m1: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3" stroke-linecap="round"/></svg>',
+  m2: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6M13.5 4l-3 16"/></svg>',
+  m3: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 20v-2a4 4 0 0 0-3-3.87M16 4.13a4 4 0 0 1 0 7.75"/></svg>',
+  m4: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 1 1 4.2 3.4c-.9.5-1.4 1-1.4 2"/><path d="M12 17.5h.01"/></svg>'
+};
+
+const MODULES = [
+  { id: 'm1', short: 'Architecture', label: 'Technical & Automation Architecture', accent: 'indigo', icon: ICONS.m1,
+    tagline: 'Selenium, Playwright, Cypress and WebdriverIO execution models, CI/CD pipelines, parallel execution, flaky test management and reporting frameworks.', groups: M1 },
+  { id: 'm2', short: 'Coding', label: 'Coding & Algorithms', accent: 'sky', icon: ICONS.m2,
+    tagline: 'QA-flavoured coding tasks: string and log manipulation, data structures, a custom test runner, retry with backoff and concurrency limiting \u2014 in JavaScript/TypeScript or Python.', groups: M2 },
+  { id: 'm3', short: 'Leadership', label: 'Behavioral & Leadership', accent: 'emerald', icon: ICONS.m3,
+    tagline: 'STAR-method prompts for senior-level situations, written as models you can rehearse aloud in professional technical English.', groups: M3 },
+  { id: 'm4', short: 'Mock Interview', label: 'Mock Interview Simulator', accent: 'amber', icon: ICONS.m4,
+    tagline: 'Tricky conceptual questions with model answers. Reveal the answer, then honestly mark yourself as Mastered or Needs Review.', groups: null, questions: QUESTIONS }
+];
+
+const ACCENT = {
+  indigo: { text: 'text-indigo-300', soft: 'bg-indigo-500/10', border: 'border-indigo-400/40', bar: 'from-indigo-500 to-sky-400' },
+  sky:    { text: 'text-sky-300',    soft: 'bg-sky-500/10',    border: 'border-sky-400/40',    bar: 'from-sky-500 to-cyan-300' },
+  emerald:{ text: 'text-emerald-300',soft: 'bg-emerald-500/10',border: 'border-emerald-400/40',bar: 'from-emerald-500 to-teal-300' },
+  amber:  { text: 'text-amber-300',  soft: 'bg-amber-500/10',  border: 'border-amber-400/40',  bar: 'from-amber-500 to-orange-400' }
+};
+
+function loadState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (raw && typeof raw === 'object') {
+      return { checks: raw.checks || {}, marks: raw.marks || {}, module: raw.module || 'm1' };
+    }
+  } catch (e) { /* corrupted storage - fall through to defaults */ }
+  return { checks: {}, marks: {}, module: 'm1' };
+}
+
+let state = loadState();
+if (!MODULES.some(m => m.id === state.module)) state.module = 'm1';
+
+const open = new Set();        // expanded accordion items (session only)
+let lang = 'js';               // active snippet language
+let searchQuery = '';
+let questionFilter = 'all';    // all | mastered | review
+let spotlightId = null;
+
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function plain(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+const RE_JS = /(\/\/[^\n]*)|('[^'\n]*'|"[^"\n]*")|\b(async|await|function|const|let|var|return|if|else|for|while|try|catch|finally|throw|new|class|export|import|from|default|typeof|instanceof|null|undefined|true|false|this|of|in|do|break|continue|yield|super|extends|void|delete)\b|\b(\d+(?:\.\d+)?)\b/g;
+const RE_PY = /(#[^\n]*)|('[^'\n]*'|"[^"\n]*")|\b(def|class|import|from|return|if|elif|else|for|while|try|except|finally|raise|with|as|async|await|lambda|None|True|False|and|or|not|in|is|pass|yield|global|nonlocal|self|assert|print)\b|\b(\d+(?:\.\d+)?)\b/g;
+
+function highlight(code, mode) {
+  const src = plain(code);
+  const re = mode === 'py' ? RE_PY : RE_JS;
+  return src.replace(re, function (m, c, s, k, n) {
+    if (c) return '<span class="text-slate-500 italic">' + c + '</span>';
+    if (s) return '<span class="text-emerald-300">' + s + '</span>';
+    if (k) return '<span class="text-sky-300">' + k + '</span>';
+    if (n) return '<span class="text-amber-300">' + n + '</span>';
+    return m;
+  });
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.firstElementChild.textContent = msg;
+  el.classList.remove('translate-y-4', 'opacity-0');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.add('translate-y-4', 'opacity-0'); }, 2200);
+}
+
+function moduleItems(mod) {
+  if (mod.id === 'm4') return mod.questions;
+  const out = [];
+  mod.groups.forEach(function (g) { g.items.forEach(function (i) { out.push(i); }); });
+  return out;
+}
+
+function moduleProgress(id) {
+  const mod = MODULES.find(function (m) { return m.id === id; });
+  const items = moduleItems(mod);
+  const done = mod.id === 'm4'
+    ? items.filter(function (q) { return state.marks[q.id] === 'mastered'; }).length
+    : items.filter(function (i) { return state.checks[i.id]; }).length;
+  return { done: done, total: items.length, pct: items.length ? Math.round(done / items.length * 100) : 0 };
+}
+
+function overallProgress() {
+  let total = 0, done = 0;
+  MODULES.forEach(function (m) { const p = moduleProgress(m.id); total += p.total; done += p.done; });
+  return { total: total, done: done, pct: total ? Math.round(done / total * 100) : 0 };
+}
+
+function updateProgress() {
+  const o = overallProgress();
+  document.getElementById('pct').textContent = o.pct;
+  document.getElementById('bar').style.width = o.pct + '%';
+
+  const topics = ['m1', 'm2', 'm3'].map(moduleProgress);
+  const tDone = topics.reduce(function (a, p) { return a + p.done; }, 0);
+  const tTotal = topics.reduce(function (a, p) { return a + p.total; }, 0);
+  const q = moduleProgress('m4');
+  const review = QUESTIONS.filter(function (x) { return state.marks[x.id] === 'review'; }).length;
+
+  document.getElementById('stat-topics').textContent = tDone + '/' + tTotal;
+  document.getElementById('stat-mastered').textContent = q.done + '/' + q.total;
+  document.getElementById('stat-review').textContent = review;
+
+  document.querySelectorAll('[data-tab-pct]').forEach(function (el) {
+    const p = moduleProgress(el.getAttribute('data-tab-pct'));
+    el.textContent = p.done + '/' + p.total;
+    const bar = el.closest('button').querySelector('[data-tab-bar]');
+    if (bar) bar.style.width = p.pct + '%';
+  });
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = MODULES.map(function (m) {
+    const active = state.module === m.id;
+    const p = moduleProgress(m.id);
+    const a = ACCENT[m.accent];
+    return '<button type="button" data-tab="' + m.id + '" aria-current="' + (active ? 'page' : 'false') + '"' +
+      ' class="group relative min-w-[240px] snap-start rounded-2xl border p-4 text-left transition-all duration-200 ' +
+      (active
+        ? a.border + ' ' + a.soft + ' shadow-glow'
+        : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]') + '">' +
+      '<div class="flex items-start justify-between gap-3">' +
+        '<span class="' + (active ? a.text : 'text-slate-500 group-hover:text-slate-300') + '">' + m.icon + '</span>' +
+        '<span class="rounded-md bg-black/30 px-2 py-1 font-mono text-[10px] font-semibold tabular-nums ' +
+          (p.pct === 100 ? 'text-emerald-300' : 'text-slate-400') + '" data-tab-pct="' + m.id + '">' + p.done + '/' + p.total + '</span>' +
+      '</div>' +
+      '<p class="mt-3 text-sm font-semibold ' + (active ? 'text-white' : 'text-slate-300 group-hover:text-white') + '">' + esc(m.short) + '</p>' +
+      '<p class="mt-0.5 text-[11px] leading-snug text-slate-500">' + esc(m.label) + '</p>' +
+      '<div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-black/40">' +
+        '<div data-tab-bar style="width:' + p.pct + '%" class="h-full rounded-full bg-gradient-to-r ' + a.bar + ' transition-[width] duration-500"></div>' +
+      '</div>' +
+    '</button>';
+  }).join('');
+}
+
+/* ============================================================
+   EXPANSION BUILDERS
+   ============================================================ */
+function starHtml(star) {
+  const rows = [
+    ['S', 'Situation', star.situation, '#818cf8', 'text-indigo-300'],
+    ['T', 'Task', star.task, '#38bdf8', 'text-sky-300'],
+    ['A', 'Action', star.action, '#34d399', 'text-emerald-300'],
+    ['R', 'Result', star.result, '#fbbf24', 'text-amber-300']
+  ];
+  return '<div class="mt-4 grid gap-3 sm:grid-cols-2">' + rows.map(function (r) {
+    return '<div class="rounded-xl border border-white/10 bg-white/[0.03] p-4" style="border-left:3px solid ' + r[3] + '">' +
+      '<p class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] ' + r[4] + '">' +
+        '<span class="inline-flex h-4 w-4 items-center justify-center rounded bg-white/10 text-[9px] text-white">' + r[0] + '</span>' + r[1] +
+      '</p>' +
+      '<p class="mt-2 text-[13px] leading-relaxed text-slate-300">' + esc(r[2]) + '</p>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function codeHtml(code) {
+  const active = lang;
+  function block(mode, label, text) {
+    const isActive = active === mode;
+    return '<pre data-code="' + mode + '" class="' + (isActive ? '' : 'hidden ') +
+      'thin-scroll max-h-[460px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed text-slate-300">' +
+      highlight(text, mode) + '</pre>';
+  }
+  return '<div data-codeblock class="mt-5 overflow-hidden rounded-xl border border-white/10 bg-ink-950">' +
+    '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.02] px-3 py-2">' +
+      '<span class="font-mono text-[11px] text-slate-500">// implementation</span>' +
+      '<div class="flex items-center gap-1">' +
+        '<button type="button" data-lang="js" class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition ' +
+          (active === 'js' ? 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40' : 'text-slate-500 hover:text-slate-300') + '">JavaScript / TypeScript</button>' +
+        '<button type="button" data-lang="py" class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition ' +
+          (active === 'py' ? 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40' : 'text-slate-500 hover:text-slate-300') + '">Python</button>' +
+        '<button type="button" data-copy class="ml-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-slate-500 transition hover:text-white hover:border-white/25">Copy</button>' +
+      '</div>' +
+    '</div>' +
+    block('js', '', code.js) + block('py', '', code.py) +
+  '</div>';
+}
+
+function expansionHtml(item) {
+  let html = '<p class="text-[13.5px] leading-relaxed text-slate-400">' + esc(item.detail) + '</p>';
+  if (item.bullets) {
+    html += '<ul class="mt-4 space-y-2.5">' + item.bullets.map(function (b) {
+      return '<li class="flex gap-2.5 text-[13px] leading-relaxed text-slate-400">' +
+        '<svg class="mt-1 h-3.5 w-3.5 shrink-0 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<span>' + esc(b) + '</span></li>';
+    }).join('') + '</ul>';
+  }
+  if (item.star) html += starHtml(item.star);
+  if (item.code) html += codeHtml(item.code);
+  if (item.watch) {
+    html += '<div class="mt-5 rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-4">' +
+      '<p class="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">What the interviewer is listening for</p>' +
+      '<p class="mt-2 text-[13px] leading-relaxed text-slate-300">' + esc(item.watch) + '</p></div>';
+  }
+  return html;
+}
+
+function tagsHtml(tags) {
+  if (!tags || !tags.length) return '';
+  return tags.map(function (t) {
+    return '<span class="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">' + esc(t) + '</span>';
+  }).join('');
+}
+
+function itemHtml(item) {
+  const checked = !!state.checks[item.id];
+  const isOpen = open.has(item.id);
+  const search = (item.title + ' ' + item.detail + ' ' + (item.tags || []).join(' ')).toLowerCase();
+  return '<li data-item="' + item.id + '" data-search="' + esc(search) + '" class="transition-colors hover:bg-white/[0.02]">' +
+    '<div class="flex items-start gap-3 px-5 pt-4">' +
+      '<label class="mt-0.5 shrink-0 cursor-pointer" title="Mark as prepared">' +
+        '<input type="checkbox" class="chk-input sr-only" data-check="' + item.id + '"' + (checked ? ' checked' : '') + ' />' +
+        '<span class="chk flex h-5 w-5 items-center justify-center rounded-md border border-slate-600 bg-slate-900 transition">' +
+          '<svg class="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</span>' +
+      '</label>' +
+      '<button type="button" data-toggle="' + item.id + '" aria-expanded="' + isOpen + '" class="group min-w-0 flex-1 text-left">' +
+        '<span data-title class="block text-[14px] font-semibold leading-snug transition ' +
+          (checked ? 'text-slate-500 line-through' : 'text-slate-200 group-hover:text-white') + '">' + esc(item.title) + '</span>' +
+        (item.tags ? '<span class="mt-1.5 flex flex-wrap gap-1.5">' + tagsHtml(item.tags) + '</span>' : '') +
+      '</button>' +
+      '<svg data-chevron class="mt-1 h-4 w-4 shrink-0 text-slate-600 transition-transform duration-300 ' + (isOpen ? 'rotate-180 text-indigo-400' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+    '</div>' +
+    '<div data-panel class="' + (isOpen ? '' : 'hidden ') + 'px-5 pb-5 pt-4">' + expansionHtml(item) + '</div>' +
+  '</li>';
+}
+
+/* ============================================================
+   RENDER: CHECKLIST MODULES
+   ============================================================ */
+function moduleTitle(mod) {
+  return 'Module ' + (MODULES.indexOf(mod) + 1) + ' \u00b7 ' + mod.label;
+}
+
+function toolbarHtml(mod) {
+  const p = moduleProgress(mod.id);
+  const a = ACCENT[mod.accent];
+  return '<section class="panel rounded-2xl p-5 shadow-card sm:p-6">' +
+    '<div class="flex flex-wrap items-start justify-between gap-4">' +
+      '<div class="min-w-0 flex-1">' +
+        '<div class="flex items-center gap-2.5">' +
+          '<span class="flex h-9 w-9 items-center justify-center rounded-xl ' + a.soft + ' ' + a.text + '">' + mod.icon + '</span>' +
+          '<h2 class="text-lg font-bold text-white sm:text-xl">' + esc(moduleTitle(mod)) + '</h2>' +
+        '</div>' +
+        '<p class="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">' + esc(mod.tagline) + '</p>' +
+      '</div>' +
+      '<div class="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2">' +
+        '<span class="font-mono text-lg font-bold tabular-nums ' + a.text + '">' + p.done + '/' + p.total + '</span>' +
+        '<span class="text-[10px] uppercase tracking-wider text-slate-500">prepared</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="mt-5 flex flex-wrap items-center gap-2 border-t border-white/5 pt-4">' +
+      '<div class="relative min-w-[200px] flex-1">' +
+        '<svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>' +
+        '<input type="search" data-search value="' + esc(searchQuery) + '" placeholder="Filter topics in this module..." ' +
+          'class="w-full rounded-lg border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none transition focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20" />' +
+      '</div>' +
+      '<button type="button" data-expand="all" class="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:border-white/25 hover:text-white">Expand all</button>' +
+      '<button type="button" data-expand="none" class="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:border-white/25 hover:text-white">Collapse all</button>' +
+      '<button type="button" data-bulk="on" class="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:border-emerald-400/40 hover:text-emerald-300">Check visible</button>' +
+      '<button type="button" data-bulk="off" class="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:border-rose-400/40 hover:text-rose-300">Clear visible</button>' +
+    '</div>' +
+  '</section>';
+}
+
+function groupHtml(g) {
+  return '<section data-group class="panel overflow-hidden rounded-2xl shadow-card">' +
+    '<div class="flex items-start justify-between gap-4 border-b border-white/5 bg-white/[0.02] px-5 py-4">' +
+      '<div class="min-w-0">' +
+        '<h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">' + esc(g.name) + '</h3>' +
+        '<p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">' + esc(g.hint) + '</p>' +
+      '</div>' +
+      '<span data-group-count class="shrink-0 rounded-lg bg-black/30 px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums text-slate-400">0/' + g.items.length + '</span>' +
+    '</div>' +
+    '<ul class="divide-y divide-white/5">' + g.items.map(itemHtml).join('') + '</ul>' +
+  '</section>';
+}
+
+/* ============================================================
+   RENDER: MOCK INTERVIEW MODULE
+   ============================================================ */
+function statusMeta(mark) {
+  if (mark === 'mastered') return { label: 'Mastered', cls: 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30' };
+  if (mark === 'review') return { label: 'Needs review', cls: 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30' };
+  return { label: 'Not reviewed', cls: 'bg-white/5 text-slate-500 ring-1 ring-white/10' };
+}
+
+function markBtnClass(type, active) {
+  const base = 'rounded-lg border px-3 py-2 text-xs font-semibold transition ';
+  if (type === 'mastered') {
+    return base + (active
+      ? 'border-emerald-400/60 bg-emerald-500/25 text-emerald-200'
+      : 'border-white/10 text-slate-500 hover:border-emerald-400/40 hover:text-emerald-300');
+  }
+  return base + (active
+    ? 'border-amber-400/60 bg-amber-500/25 text-amber-200'
+    : 'border-white/10 text-slate-500 hover:border-amber-400/40 hover:text-amber-300');
+}
+
+function markBtns(qid) {
+  const m = state.marks[qid];
+  return '<button type="button" data-mark="mastered" data-qid="' + qid + '" class="' + markBtnClass('mastered', m === 'mastered') + '">' +
+    '<span class="mr-1">\u2713</span>Mastered</button>' +
+    '<button type="button" data-mark="review" data-qid="' + qid + '" class="' + markBtnClass('review', m === 'review') + '">' +
+    '<span class="mr-1">\u26a0</span>Needs review</button>';
+}
+
+function questionCard(q, i) {
+  const st = statusMeta(state.marks[q.id]);
+  const haystack = (q.q + ' ' + q.a + ' ' + (q.tags || []).join(' ')).toLowerCase();
+  return '<article data-q="' + q.id + '" data-haystack="' + esc(haystack) + '" class="panel flex flex-col rounded-2xl p-5 shadow-card transition hover:border-white/20">' +
+    '<div class="flex items-start justify-between gap-3">' +
+      '<span class="font-mono text-[11px] font-bold text-slate-600">Q' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<span data-status class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ' + st.cls + '">' + st.label + '</span>' +
+    '</div>' +
+    '<h3 class="mt-3 text-[15px] font-semibold leading-snug text-white">' + esc(q.q) + '</h3>' +
+    '<span class="mt-2 flex flex-wrap gap-1.5">' + tagsHtml(q.tags) + '</span>' +
+    '<div data-answer class="hidden mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">' +
+      '<p class="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Model answer</p>' +
+      '<p class="mt-2 text-[13px] leading-relaxed text-slate-300">' + esc(q.a) + '</p>' +
+    '</div>' +
+    '<div class="mt-auto pt-4">' +
+      '<button type="button" data-reveal class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-indigo-400/40 hover:text-white">Show model answer</button>' +
+      '<div class="mt-2 grid grid-cols-2 gap-2">' + markBtns(q.id) + '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function filterChipClass(active) {
+  return 'rounded-lg border px-3 py-1.5 text-xs font-semibold transition ' + (active
+    ? 'border-indigo-400/50 bg-indigo-500/15 text-indigo-200'
+    : 'border-white/10 text-slate-500 hover:border-white/25 hover:text-slate-300');
+}
+
+function questionsHeaderHtml() {
+  const total = QUESTIONS.length;
+  const mastered = QUESTIONS.filter(function (q) { return state.marks[q.id] === 'mastered'; }).length;
+  const review = QUESTIONS.filter(function (q) { return state.marks[q.id] === 'review'; }).length;
+  const mod = MODULES.find(function (m) { return m.id === 'm4'; });
+
+  return '<section class="panel rounded-2xl p-5 shadow-card sm:p-6">' +
+    '<div class="flex flex-wrap items-start justify-between gap-4">' +
+      '<div class="min-w-0 flex-1">' +
+        '<div class="flex items-center gap-2.5">' +
+          '<span class="flex h-9 w-9 items-center justify-center rounded-xl ' + ACCENT.amber.soft + ' ' + ACCENT.amber.text + '">' + mod.icon + '</span>' +
+          '<h2 class="text-lg font-bold text-white sm:text-xl">' + esc(moduleTitle(mod)) + '</h2>' +
+        '</div>' +
+        '<p class="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">' + esc(mod.tagline) + '</p>' +
+      '</div>' +
+      '<button type="button" data-random class="group inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-indigo-400 active:scale-[.98]">' +
+        '<svg class="h-4 w-4 transition group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M17 6h4M18 3l3 3-3 3M18 15l3 3-3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        'Generate Random Mock Question <span class="kbd ml-1">R</span>' +
+      '</button>' +
+    '</div>' +
+    '<div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">' +
+      '<div class="flex flex-wrap gap-2">' +
+        '<button type="button" data-filter="all" class="' + filterChipClass(questionFilter === 'all') + '">All <span class="font-mono">' + total + '</span></button>' +
+        '<button type="button" data-filter="mastered" class="' + filterChipClass(questionFilter === 'mastered') + '">Mastered <span class="font-mono">' + mastered + '</span></button>' +
+        '<button type="button" data-filter="review" class="' + filterChipClass(questionFilter === 'review') + '">Needs review <span class="font-mono">' + review + '</span></button>' +
+      '</div>' +
+      '<p class="text-xs text-slate-500">Answer out loud first, reveal second, grade yourself third.</p>' +
+    '</div>' +
+  '</section>';
+}
+
+function spotlightHtml(q) {
+  const st = statusMeta(state.marks[q.id]);
+  return '<div data-q="' + q.id + '" class="animate-pop rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.14] via-ink-850 to-ink-900 p-5 shadow-glow sm:p-6">' +
+    '<div class="flex flex-wrap items-center justify-between gap-3">' +
+      '<span class="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-200">' +
+        '<span class="h-1.5 w-1.5 rounded-full bg-indigo-300 animate-pulse"></span> Spotlight question</span>' +
+      '<span data-status class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ' + st.cls + '">' + st.label + '</span>' +
+    '</div>' +
+    '<h3 class="mt-4 text-lg font-semibold leading-snug text-white sm:text-xl">' + esc(q.q) + '</h3>' +
+    '<span class="mt-3 flex flex-wrap gap-1.5">' + tagsHtml(q.tags) + '</span>' +
+    '<div data-answer class="hidden mt-5 rounded-xl border border-white/10 bg-black/40 p-5">' +
+      '<p class="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Model answer</p>' +
+      '<p class="mt-2 text-sm leading-relaxed text-slate-300">' + esc(q.a) + '</p>' +
+    '</div>' +
+    '<div class="mt-5 flex flex-wrap items-center gap-2">' +
+      '<button type="button" data-reveal class="rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-indigo-300/50">Show model answer</button>' +
+      markBtns(q.id) +
+      '<button type="button" data-random class="rounded-lg border border-white/10 px-4 py-2.5 text-sm font-semibold text-indigo-200 transition hover:border-indigo-400/50 hover:bg-indigo-500/15">Another \u21bb</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderModule() {
+  const mod = MODULES.find(function (m) { return m.id === state.module; });
+  const root = document.getElementById('module-root');
+
+  if (mod.id === 'm4') {
+    root.innerHTML = '<div class="animate-fade-up space-y-6">' +
+      questionsHeaderHtml() +
+      '<div id="spotlight" class="empty:hidden"></div>' +
+      '<div id="qgrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">' +
+        mod.questions.map(questionCard).join('') +
+        '<p data-empty class="hidden col-span-full rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-slate-500">No questions match this filter yet.</p>' +
+      '</div>' +
+    '</div>';
+    applyQuestionFilter();
+  } else {
+    root.innerHTML = '<div class="animate-fade-up space-y-6">' +
+      toolbarHtml(mod) +
+      mod.groups.map(groupHtml).join('') +
+    '</div>';
+    applySearch();
+    refreshCounts();
+  }
+  updateProgress();
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function setModule(id) {
+  if (state.module === id) return;
+  state.module = id;
+  searchQuery = '';
+  save();
+  renderTabs();
+  renderModule();
+}
+
+function refreshCounts() {
+  document.querySelectorAll('[data-group]').forEach(function (sec) {
+    const items = sec.querySelectorAll('[data-item]');
+    const checked = sec.querySelectorAll('[data-check]:checked').length;
+    const badge = sec.querySelector('[data-group-count]');
+    if (badge) badge.textContent = checked + '/' + items.length;
+    const finished = items.length > 0 && checked === items.length;
+    if (badge) {
+      badge.classList.toggle('text-emerald-300', finished);
+      badge.classList.toggle('text-slate-400', !finished);
+    }
+  });
+  updateProgress();
+}
+
+function applySearch() {
+  const q = searchQuery.trim().toLowerCase();
+  document.querySelectorAll('[data-group]').forEach(function (sec) {
+    let visible = 0;
+    sec.querySelectorAll('[data-item]').forEach(function (li) {
+      const show = !q || (li.getAttribute('data-search') || '').indexOf(q) !== -1;
+      li.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    sec.classList.toggle('hidden', visible === 0);
+  });
+}
+
+function toggleItem(id) {
+  const li = document.querySelector('[data-item="' + id + '"]');
+  if (!li) return;
+  const panel = li.querySelector('[data-panel]');
+  const chev = li.querySelector('[data-chevron]');
+  const btn = li.querySelector('[data-toggle]');
+  const willOpen = panel.classList.contains('hidden');
+
+  panel.classList.toggle('hidden', !willOpen);
+  chev.classList.toggle('rotate-180', willOpen);
+  chev.classList.toggle('text-indigo-400', willOpen);
+  btn.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) open.add(id); else open.delete(id);
+}
+
+function expandAll(all) {
+  const mod = MODULES.find(function (m) { return m.id === state.module; });
+  open.clear();
+  if (all) {
+    mod.groups.forEach(function (g) {
+      g.items.forEach(function (i) {
+        if (!searchQuery || i.title.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1 || i.detail.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1) open.add(i.id);
+      });
+    });
+  }
+  renderModule();
+}
+
+function setCheck(id, checked) {
+  if (checked) state.checks[id] = true; else delete state.checks[id];
+  save();
+
+  const li = document.querySelector('[data-item="' + id + '"]');
+  if (li) {
+    const t = li.querySelector('[data-title]');
+    if (t) {
+      t.classList.toggle('text-slate-500', checked);
+      t.classList.toggle('line-through', checked);
+      t.classList.toggle('text-slate-200', !checked);
+      t.classList.toggle('text-white', false);
+    }
+  }
+  refreshCounts();
+}
+
+function bulkCheck(on) {
+  document.querySelectorAll('[data-item]:not(.hidden)').forEach(function (li) {
+    const cb = li.querySelector('[data-check]');
+    if (!cb) return;
+    cb.checked = on;
+    const id = cb.getAttribute('data-check');
+    if (on) state.checks[id] = true; else delete state.checks[id];
+    const t = li.querySelector('[data-title]');
+    if (t) {
+      t.classList.toggle('text-slate-500', on);
+      t.classList.toggle('line-through', on);
+      t.classList.toggle('text-slate-200', !on);
+    }
+  });
+  save();
+  refreshCounts();
+  toast(on ? 'Visible topics marked as prepared' : 'Visible topics cleared');
+}
+
+function setLang(next) {
+  lang = next;
+  renderModule();
+  toast(next === 'js' ? 'Showing JavaScript / TypeScript' : 'Showing Python');
+}
+
+function doCopy(btn) {
+  const wrap = btn.closest('[data-codeblock]');
+  const pre = wrap ? wrap.querySelector('[data-code]:not(.hidden)') : null;
+  if (!pre) return;
+  const text = pre.innerText;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { toast('Snippet copied to clipboard'); },
+      function () { toast('Copy blocked by the browser'); });
+  } else {
+    toast('Clipboard unavailable in this context');
+  }
+}
+
+function toggleAnswer(btn) {
+  const scope = btn.closest('[data-q]');
+  if (!scope) return;
+  const ans = scope.querySelector('[data-answer]');
+  const nowHidden = ans.classList.toggle('hidden');
+  if (!nowHidden) {
+    ans.classList.remove('animate-fade-in');
+    void ans.offsetWidth;
+    ans.classList.add('animate-fade-in');
+  }
+  btn.textContent = nowHidden ? 'Show model answer' : 'Hide model answer';
+}
+
+function updateQuestionCards(id) {
+  const m = state.marks[id];
+  const st = statusMeta(m);
+  document.querySelectorAll('[data-q="' + id + '"]').forEach(function (card) {
+    const badge = card.querySelector('[data-status]');
+    if (badge) { badge.textContent = st.label; badge.className = 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ' + st.cls; }
+    card.querySelectorAll('[data-mark]').forEach(function (b) {
+      const active = b.getAttribute('data-mark') === m;
+      b.className = markBtnClass(b.getAttribute('data-mark'), active);
+      b.innerHTML = (b.getAttribute('data-mark') === 'mastered'
+        ? '<span class="mr-1">\u2713</span>Mastered'
+        : '<span class="mr-1">\u26a0</span>Needs review');
+    });
+  });
+}
+
+function refreshQuestionChips() {
+  const mastered = QUESTIONS.filter(function (q) { return state.marks[q.id] === 'mastered'; }).length;
+  const review = QUESTIONS.filter(function (q) { return state.marks[q.id] === 'review'; }).length;
+  const counts = { all: QUESTIONS.length, mastered: mastered, review: review };
+  document.querySelectorAll('[data-filter]').forEach(function (b) {
+    const key = b.getAttribute('data-filter');
+    b.className = filterChipClass(questionFilter === key);
+    b.innerHTML = (key === 'all' ? 'All' : key === 'mastered' ? 'Mastered' : 'Needs review') +
+      ' <span class="font-mono">' + counts[key] + '</span>';
+  });
+}
+
+function applyQuestionFilter() {
+  const grid = document.getElementById('qgrid');
+  if (!grid) return;
+  let shown = 0;
+  grid.querySelectorAll('article[data-q]').forEach(function (card) {
+    const m = state.marks[card.getAttribute('data-q')];
+    const show = questionFilter === 'all' ||
+      (questionFilter === 'mastered' && m === 'mastered') ||
+      (questionFilter === 'review' && m === 'review');
+    card.classList.toggle('hidden', !show);
+    if (show) shown++;
+  });
+  const empty = grid.querySelector('[data-empty]');
+  if (empty) empty.classList.toggle('hidden', shown > 0);
+  refreshQuestionChips();
+}
+
+function setMark(qid, type) {
+  if (state.marks[qid] === type) delete state.marks[qid];
+  else state.marks[qid] = type;
+  save();
+  updateQuestionCards(qid);
+  applyQuestionFilter();
+  updateProgress();
+
+  const label = statusMeta(state.marks[qid]).label;
+  const q = QUESTIONS.find(function (x) { return x.id === qid; });
+  toast((q ? q.q.slice(0, 46) + (q.q.length > 46 ? '\u2026' : '') + ' \u2014 ' : '') + label);
+}
+
+function showRandom() {
+  if (state.module !== 'm4') {
+    state.module = 'm4';
+    searchQuery = '';
+    save();
+    renderTabs();
+    renderModule();
+  }
+  const spot = document.getElementById('spotlight');
+  if (!spot) return;
+
+  let pool = QUESTIONS.filter(function (q) { return q.id !== spotlightId; });
+  const filtered = pool.filter(function (q) {
+    const m = state.marks[q.id];
+    return questionFilter === 'all' || (questionFilter === 'mastered' && m === 'mastered') || (questionFilter === 'review' && m === 'review');
+  });
+  if (filtered.length) pool = filtered;
+  if (!pool.length) pool = QUESTIONS;
+
+  const q = pool[Math.floor(Math.random() * pool.length)];
+  spotlightId = q.id;
+  spot.innerHTML = spotlightHtml(q);
+  if (spot.scrollIntoView) spot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetProgress() {
+  const ok = window.confirm('Reset every checkbox, mock-question grade and clear your saved progress?');
+  if (!ok) return;
+  state = { checks: {}, marks: {}, module: state.module };
+  searchQuery = '';
+  questionFilter = 'all';
+  spotlightId = null;
+  open.clear();
+  save();
+  renderTabs();
+  renderModule();
+  toast('Progress reset');
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.getElementById('tabs').addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-tab]');
+  if (btn) setModule(btn.getAttribute('data-tab'));
+});
+
+const root = document.getElementById('module-root');
+
+root.addEventListener('click', function (e) {
+  const el = e.target;
+  let target;
+
+  if ((target = el.closest('[data-toggle]'))) { toggleItem(target.getAttribute('data-toggle')); return; }
+  if ((target = el.closest('[data-lang]'))) { setLang(target.getAttribute('data-lang')); return; }
+  if ((target = el.closest('[data-copy]'))) { doCopy(target); return; }
+  if ((target = el.closest('[data-expand]'))) { expandAll(target.getAttribute('data-expand') === 'all'); return; }
+  if ((target = el.closest('[data-bulk]'))) { bulkCheck(target.getAttribute('data-bulk') === 'on'); return; }
+  if ((target = el.closest('[data-reveal]'))) { toggleAnswer(target); return; }
+  if ((target = el.closest('[data-mark]'))) { setMark(target.getAttribute('data-qid'), target.getAttribute('data-mark')); return; }
+  if ((target = el.closest('[data-filter]'))) { questionFilter = target.getAttribute('data-filter'); applyQuestionFilter(); return; }
+  if ((target = el.closest('[data-random]'))) { showRandom(); return; }
+});
+
+root.addEventListener('change', function (e) {
+  const cb = e.target.closest('[data-check]');
+  if (cb) setCheck(cb.getAttribute('data-check'), cb.checked);
+});
+
+root.addEventListener('input', function (e) {
+  if (e.target.matches('[data-search]')) {
+    searchQuery = e.target.value;
+    applySearch();
+  }
+});
+
+document.getElementById('btn-random-header').addEventListener('click', showRandom);
+document.getElementById('btn-reset').addEventListener('click', resetProgress);
+
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'r' && e.key !== 'R') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = document.activeElement;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  e.preventDefault();
+  showRandom();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderTabs();
+renderModule();
+</script>
+</body>
+</html>

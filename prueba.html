@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senior QA Automation Engineer Interview Prep Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f9ff', 500: '#06b6d4', 600: '#0891b2', 900: '#0e7490' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+  <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-cyan-400">Senior QA Automation Engineer Interview Prep Hub</h1>
+        <p class="text-xs text-slate-400">Technical, Leadership & System Design Mastery in English</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <div class="text-xs text-slate-400">Overall Progress</div>
+          <div id="progress-text" class="text-sm font-semibold text-cyan-400">0% Completed</div>
+        </div>
+        <div class="w-32 bg-slate-800 rounded-full h-2.5 overflow-hidden">
+          <div id="progress-bar" class="bg-cyan-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Module Selector Tabs -->
+    <div class="flex space-x-2 border-b border-slate-800 mb-8 overflow-x-auto pb-2">
+      <button onclick="switchTab('arch')" id="tab-arch" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg bg-slate-800 text-cyan-400 border-b-2 border-cyan-400">1. Technical & Architecture</button>
+      <button onclick="switchTab('coding')" id="tab-coding" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200">2. Coding & Algorithms</button>
+      <button onclick="switchTab('behavioral')" id="tab-behavioral" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200">3. Leadership & STAR</button>
+      <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200">4. Interview Simulator</button>
+    </div>
+
+    <!-- Module 1: Architecture -->
+    <section id="mod-arch" class="space-y-6">
+      <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+        <h2 class="text-lg font-semibold text-cyan-300 mb-2">WebdriverIO & Automation Framework Architecture</h2>
+        <p class="text-sm text-slate-300 mb-4">Study key concepts for Senior-level automation design and execution pipelines.</p>
+        
+        <div class="space-y-4">
+          <label class="flex items-start gap-3 p-3 rounded bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+            <input type="checkbox" onchange="toggleItem('item-wdio')" id="item-wdio" class="mt-1 accent-cyan-500">
+            <div>
+              <span class="font-medium text-slate-200">WebdriverIO Execution Lifecycle & Async Handling</span>
+              <p class="text-xs text-slate-400 mt-1">Understanding hooks (`before`, `beforeTest`, `afterTest`), custom services, and async/await syntax transition in WDIO v8+.</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+            <input type="checkbox" onchange="toggleItem('item-flaky')" id="item-flaky" class="mt-1 accent-cyan-500">
+            <div>
+              <span class="font-medium text-slate-200">Flaky Test Mitigation Strategies</span>
+              <p class="text-xs text-slate-400 mt-1">Avoiding hard waits (`browser.pause`), using dynamic explicit waits (`waitUntil`), API pre-conditions, and auto-retries for transient network issues.</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+            <input type="checkbox" onchange="toggleItem('item-cicd')" id="item-cicd" class="mt-1 accent-cyan-500">
+            <div>
+              <span class="font-medium text-slate-200">CI/CD Parallelization & Test Sharding</span>
+              <p class="text-xs text-slate-400 mt-1">Configuring matrix builds in GitHub Actions/GitLab CI, Dockerized browser grids, and publishing Allure/JUnit test reports.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 2: Coding -->
+    <section id="mod-coding" class="hidden space-y-6">
+      <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+        <h2 class="text-lg font-semibold text-cyan-300 mb-4">Senior Automation Coding Snippets</h2>
+        <div class="space-y-4">
+          <div class="bg-slate-950 p-4 rounded-lg font-mono text-xs text-slate-300 border border-slate-800">
+            <div class="text-slate-500 mb-2">// Custom Exponential Backoff Retry Pattern in TypeScript</div>
+            <pre><code>async function retryOperation&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;, retries = 3, delay = 1000): Promise&lt;T&gt; {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries &lt;= 0) throw error;
+    await new Promise(res =&gt; setTimeout(res, delay));
+    return retryOperation(fn, retries - 1, delay * 2);
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 3: Behavioral -->
+    <section id="mod-behavioral" class="hidden space-y-6">
+      <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+        <h2 class="text-lg font-semibold text-cyan-300 mb-4">STAR Method Interview Scenarios</h2>
+        <div class="p-4 bg-slate-900/80 rounded border border-slate-800">
+          <h3 class="font-medium text-slate-200 text-sm">"Tell me about a time an automated test missed a critical bug in production."</h3>
+          <p class="text-xs text-slate-400 mt-2"><strong>Model Answer Structure:</strong> Focus on Root Cause Analysis (RCA), updating the test suite with missing edge cases, and establishing contract testing to catch API breaking changes earlier in the pipeline.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 4: Simulator -->
+    <section id="mod-simulator" class="hidden space-y-6">
+      <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 text-center">
+        <h2 class="text-lg font-semibold text-cyan-300 mb-2">Random Question Generator</h2>
+        <p class="text-xs text-slate-400 mb-6">Test your quick-thinking and technical vocabulary in English.</p>
+        <button onclick="generateQuestion()" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-sm rounded-lg shadow transition-all">Generate Technical Question</button>
+        <div id="question-box" class="mt-6 p-6 bg-slate-950 rounded-lg border border-slate-800 hidden text-left max-w-2xl mx-auto">
+          <div id="q-text" class="font-medium text-slate-200 text-base mb-4"></div>
+          <button onclick="toggleAnswer()" class="text-xs text-cyan-400 hover:underline">Show Model Answer</button>
+          <div id="a-text" class="mt-3 text-xs text-slate-300 hidden border-t border-slate-800 pt-3 leading-relaxed"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { q: "How do you handle flaky tests in a high-frequency CI/CD pipeline?", a: "Isolate non-deterministic tests, replace explicit sleeps with event-driven dynamic waits, mock external unstable APIs, and implement retry mechanisms at the runner level while tracking flakiness metrics in dashboard reporters." },
+      { q: "What is the difference between WebdriverIO and Playwright regarding browser automation architecture?", a: "WebdriverIO historically relies on the W3C WebDriver protocol (though it supports Chrome DevTools Protocol), executing commands via HTTP requests to drivers. Playwright uses websockets over a single connection directly communicating with browser engines (Chromium, Firefox, WebKit), enabling faster execution and built-in auto-waiting." }
+    ];
+
+    function switchTab(tabId) {
+      document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-slate-800', 'text-cyan-400', 'border-b-2', 'border-cyan-400');
+        el.classList.add('text-slate-400');
+      });
+      document.getElementById(`mod-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      activeBtn.classList.add('bg-slate-800', 'text-cyan-400', 'border-b-2', 'border-cyan-400');
+    }
+
+    function toggleItem(id) {
+      const items = ['item-wdio', 'item-flaky', 'item-cicd'];
+      const checkedCount = items.filter(i => document.getElementById(i)?.checked).length;
+      const percentage = Math.round((checkedCount / items.length) * 100);
+      document.getElementById('progress-bar').style.width = `${percentage}%`;
+      document.getElementById('progress-text').innerText = `${percentage}% Completed`;
+    }
+
+    function generateQuestion() {
+      const box = document.getElementById('question-box');
+      const qText = document.getElementById('q-text');
+      const aText = document.getElementById('a-text');
+      const random = questions[Math.floor(Math.random() * questions.length)];
+      qText.innerText = random.q;
+      aText.innerText = random.a;
+      aText.classList.add('hidden');
+      box.classList.remove('hidden');
+    }
+
+    function toggleAnswer() {
+      document.getElementById('a-text').classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>

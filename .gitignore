@@ -1,0 +1,19 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Node (local test harness only, not part of the site) ---
+node_modules/
+package-lock.json
+package.json
+
+# --- Logs & temp ---
+*.log
+*.tmp
