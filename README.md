@@ -29,10 +29,13 @@ npx serve .
 
 | Module | Focus |
 | --- | --- |
-| **Technical & Automation Architecture** | Selenium / W3C / BiDi, Playwright, Cypress execution model, WebdriverIO, CI/CD pipelines, parallel execution vs sharding, flaky-test management, reporting frameworks, locator strategy, cross-browser & visual regression |
-| **Coding & Algorithms** | Log/string parsing, grouping & dedup, deep equality, a **custom test runner**, retry with exponential backoff, concurrency limiter, debounce + fake timers, a test-tagging DSL — each with **JavaScript/TypeScript ⇄ Python** toggles, syntax highlighting and copy-to-clipboard |
-| **Behavioral & Leadership** | 10 STAR prompts: production bugs, pushing back on deadlines, mentoring juniors, defining a test strategy from scratch, rebuilding trust in a flaky suite, disagree-and-commit |
-| **Mock Interview Simulator** | 20 flashcards with model answers in professional technical English, reveal-on-demand, **Mastered / Needs Review** grading, filters, and a **Generate Random Mock Question** spotlight |
+| **Technical & Automation Architecture** | Selenium / W3C / BiDi, Cypress execution model, WebdriverIO, CI/CD pipelines, parallel execution vs sharding, flaky-test management, reporting frameworks, locator strategy, cross-browser & visual regression — plus deep **Playwright** coverage: execution model, locators & web-first assertions, `playwright.config` projects & sharding, tracing & UI mode, network interception, and fixtures |
+| **Coding & Algorithms** | Log/string parsing, grouping & dedup, deep equality, a **custom test runner**, retry with exponential backoff, concurrency limiter, debounce + fake timers, a test-tagging DSL, and **Playwright-style helpers** (a web-first polling assertion, a storage-state session helper) — each with **JavaScript/TypeScript ⇄ Python** toggles, syntax highlighting and copy-to-clipboard |
+| **Behavioral & Leadership** | 12 STAR prompts: production bugs, pushing back on deadlines, mentoring juniors, defining a test strategy from scratch, rebuilding trust in a flaky suite, disagree-and-commit, a **Selenium/Cypress → Playwright migration**, and **cutting CI feedback below 10 minutes** |
+| **Mock Interview Simulator** | 25 flashcards with model answers in professional technical English (including fixtures, shared auth, `page.route` traps and CI-vs-local diagnosis), reveal-on-demand, **Mastered / Needs Review** grading, filters, and a **Generate Random Mock Question** spotlight |
+
+**Totals:** 37 checkable topics across the first three modules, 12 STAR prompts, 13 dual-language
+code snippets and 25 mock questions.
 
 ### 3 · Key features
 - Check/uncheck topics → progress bar and per-module badges update instantly.
@@ -48,6 +51,7 @@ npx serve .
 ```
 .
 ├── index.html      # the entire application (markup, styles, data, logic)
+├── prueba.html     # earlier, simpler draft of the app
 ├── README.md
 └── .gitignore
 ```

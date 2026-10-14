@@ -286,6 +286,58 @@ const M1 = [
           'First-class Appium integration, so a single tool can cover web and native mobile.',
           'The sync (v7 legacy) versus async (v8+) API story and why the migration mattered for TypeScript users.'
         ]
+      },
+      {
+        id: 'm1-pw-locators', title: 'Playwright locators & web-first assertions', tags: ['Playwright', 'getByRole', 'Strict mode'],
+        detail: 'Playwright locators are lazy: nothing resolves until the action runs, at which point strict mode throws if the locator matched more than one element. Prefer semantic role-and-name queries over CSS so a class rename cannot break the suite, and build complex targets by chaining and filtering instead of positional indexes.',
+        bullets: [
+          'getByRole, getByLabel, getByText, getByPlaceholder and getByTestId are the API contract; keep data-testid a deliberate agreement with developers rather than a default escape hatch.',
+          'Web-first assertions re-query until they pass or time out. expect(locator).toBeVisible() polls, whereas one captured isVisible() check is a race condition that happens to return green.',
+          'Narrow by chaining: getByTestId, then getByRole, then filter({ hasText }) \u2014 which replaces nth-child indexes and brittle CSS ancestry.',
+          'Keep XPath as a last resort for DOM with no accessible semantics, not as a habit carried over from Selenium.'
+        ],
+        code: {
+          js: `// Role and name first: resilient to markup churn
+await page.getByRole('button', { name: 'Add to cart' }).click();
+await page.getByRole('heading', { level: 1, name: 'Checkout' }).toBeVisible();
+
+// Forms: labels and placeholders
+await page.getByLabel('Email').fill('qa@example.com');
+await page.getByPlaceholder('Search').fill('playwright');
+
+// Chain and filter instead of positional indexes
+await page.getByTestId('line-items')
+  .getByRole('row')
+  .filter({ hasText: 'Pro plan' })
+  .getByRole('button', { name: 'Remove' })
+  .click();
+
+// Testid contract for elements with no useful role
+await page.getByTestId('discount-code').fill('QA10');
+
+// Web-first assertion: re-queries until the timeout
+await expect(page.getByTestId('order-confirmation')).toContainText('Order placed');`,
+          py: `# Role and name first: resilient to markup churn
+page.get_by_role('button', name='Add to cart').click()
+page.get_by_role('heading', level=1, name='Checkout').is_visible()
+
+# Forms: labels and placeholders
+page.get_by_label('Email').fill('qa@example.com')
+page.get_by_placeholder('Search').fill('playwright')
+
+# Chain and filter instead of positional indexes
+(page.get_by_test_id('line-items')
+     .get_by_role('row')
+     .filter(has_text='Pro plan')
+     .get_by_role('button', name='Remove')
+     .click())
+
+# Testid contract for elements with no useful role
+page.get_by_test_id('discount-code').fill('QA10')
+
+# Web-first assertion: re-queries until the timeout
+expect(page.get_by_test_id('order-confirmation')).to_contain_text('Order placed')`
+        }
       }
     ]
   },
@@ -332,6 +384,78 @@ const M1 = [
           'Playwright HTML reporter + trace.zip, JUnit XML for CI ingestion, and native CI test reports.',
           'Structured logs with a correlation ID so a failed UI step can be matched to the server log line.'
         ]
+      },
+      {
+        id: 'm1-pw-config', title: 'playwright.config, projects & sharding', tags: ['Playwright', 'Projects', 'Shard'],
+        detail: 'The config file declares the execution contract for the whole suite: which browsers run, how failures are captured, how many workers are allowed, and how CI splits the work. It is a reliable way for interviewers to find out whether you have actually run Playwright at scale.',
+        bullets: [
+          'Projects express the matrix (browser, viewport, locale, device) and can depend on each other: an auth setup project runs once and shares storageState with everything downstream.',
+          'Set trace on-first-retry, screenshot only-on-failure and video retain-on-failure so a green run stays cheap but every failure keeps its evidence.',
+          'Sharding is per CI job (--shard=1/4); workers are per job. Balance shards on historical durations rather than test counts.',
+          'grep and grepInvert tag the suite so pull requests run smoke while the nightly job runs everything.'
+        ],
+        code: {
+          js: `// playwright.config.ts - the execution contract for the whole suite
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,        // diagnose flake, never mask it
+  workers: process.env.CI ? 4 : undefined,
+  reporter: [['html', { open: 'never' }], ['junit', { outputFile: 'junit.xml' }], ['github']],
+
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry',               // cheap when green, complete when red
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure'
+  },
+
+  projects: [
+    { name: 'setup',    testMatch: /.*\\.setup\\.ts/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] },  dependencies: ['setup'] },
+    { name: 'firefox',  use: { ...devices['Desktop Firefox'] }, dependencies: ['setup'] },
+    { name: 'webkit',   use: { ...devices['Desktop Safari'] },  dependencies: ['setup'] },
+    { name: 'mobile',   use: { ...devices['iPhone 14'] } }
+  ]
+});
+
+// CI sharding - one independent job per shard, results merged by the reporter:
+//   npx playwright test --shard=1/4   (repeat for 2/4, 3/4, 4/4)`,
+          py: `# pytest.ini - the Python counterpart of playwright.config.ts
+# workers  -> pytest-xdist          (-n 4)
+# retries  -> pytest-rerunfailures  (--reruns 2)
+# projects -> --browser plus markers
+[pytest]
+addopts =
+    --browser chromium
+    --tracing retain-on-failure
+    --screenshot only-on-failure
+    --video retain-on-failure
+    --base-url http://localhost:3000
+    -n 4
+    --reruns 2
+testpaths = tests
+markers =
+    smoke: critical money paths, run on every merge
+    regression: full nightly suite
+    webkit: browser-specific coverage
+
+# Sharding comes from a plugin rather than a flag:
+#   pytest --splits 4 --group 1   (pytest-split, balanced on historical duration)`
+        }
+      },
+      {
+        id: 'm1-pw-trace', title: 'Tracing, UI mode & failure triage', tags: ['Playwright', 'Trace', 'UI mode'],
+        detail: 'When a Playwright test fails in CI the trace is the artefact you actually want: a DOM snapshot timeline with network, console, source and every action the test performed, openable locally with a single command.',
+        bullets: [
+          'trace on-first-retry keeps green runs fast while still capturing the run that failed on its first attempt.',
+          'npx playwright show-trace trace.zip opens the viewer; the action timeline usually reveals the cause in under a minute.',
+          'UI mode (npx playwright test --ui) gives watch, step-through and pick-a-test running \u2014 far better than adding console.log for local debugging.',
+          'test.step and testInfo.attach break a long test into readable stages and attach payloads, so the HTML report explains itself without anyone opening a trace.'
+        ]
       }
     ]
   },
@@ -357,6 +481,78 @@ const M1 = [
           'Clouds: BrowserStack, Sauce Labs, AWS Device Farm \u2014 and what they cost at scale.',
           'Deterministic screenshots: fixed viewport and device scale, bundled fonts, animations off, dynamic regions masked.',
           'Diff thresholds plus anti-aliasing compensation; zero tolerance produces noise nobody reads.'
+        ]
+      },
+      {
+        id: 'm1-pw-network', title: 'Network interception & API-first testing', tags: ['Playwright', 'page.route', 'APIRequestContext'],
+        detail: 'Playwright can intercept every request the page makes and it ships a first-class HTTP client. Used together they let you stub slow third parties, force error paths, and seed data through the API in milliseconds instead of clicking through the UI.',
+        bullets: [
+          'Stub slow or paid dependencies (analytics, recommendations, the payment sandbox) so the test is deterministic and fast.',
+          'page.routeFromHAR replays a recorded conversation \u2014 excellent for visual work, dangerous if the recording is never refreshed.',
+          'APIRequestContext runs requests outside the browser: create users, reset state and assert server-side invariants before the first click.',
+          'Watch your own traffic: an interceptor that is never unrouted keeps stubbing every later test that shares the page.'
+        ],
+        code: {
+          js: `// Stub a flaky third party so the test stays deterministic
+await page.route('**/api/recommendations*', route => route.fulfill({
+  status: 200,
+  contentType: 'application/json',
+  body: JSON.stringify({ items: [] })
+}));
+
+// Force an error path without touching the backend
+await page.route('**/api/checkout', route => route.fulfill({
+  status: 500,
+  body: JSON.stringify({ error: 'gateway_timeout' })
+}));
+
+// Assert on the request the browser actually sent
+const [response] = await Promise.all([
+  page.waitForResponse(r => r.url().includes('/api/orders') && r.request().method() === 'POST'),
+  page.getByRole('button', { name: 'Place order' }).click()
+]);
+expect((await response.json()).orderId).toMatch(/^ord_/);
+
+await page.unroute('**/api/recommendations*');
+
+// API-first: seed data outside the browser, in milliseconds
+const api = await request.newContext({ baseURL: process.env.BASE_URL });
+const { userId } = await (await api.post('/api/users', { data: { role: 'qa' } })).json();`,
+          py: `import json
+from playwright.sync_api import expect
+
+def stub_recommendations(route):
+    route.fulfill(status=200, content_type='application/json',
+                  body=json.dumps({'items': []}))
+
+def force_checkout_error(route):
+    route.fulfill(status=500, body=json.dumps({'error': 'gateway_timeout'}))
+
+page.route('**/api/recommendations*', stub_recommendations)
+page.route('**/api/checkout', force_checkout_error)
+
+# Assert on the request the browser actually sent
+with page.expect_response(
+    lambda r: '/api/orders' in r.url and r.request.method == 'POST'
+) as info:
+    page.get_by_role('button', name='Place order').click()
+
+assert info.value.json()['orderId'].startswith('ord_')
+page.unroute('**/api/recommendations*')
+
+# API-first: seed data outside the browser, in milliseconds
+api = request.new_context(base_url=base_url)
+user_id = api.post('/api/users', data={'role': 'qa'}).json()['userId']`
+        }
+      },
+      {
+        id: 'm1-pw-fixtures', title: 'Fixtures, test.extend & page-object boundaries', tags: ['Playwright', 'Fixtures', 'test.extend'],
+        detail: 'Fixtures are Playwright\u2019s dependency injection: created before a test, disposed after it, able to depend on each other and to be scoped. They are the typed, composable alternative to a deep inheritance tree of page objects.',
+        bullets: [
+          'test.extend lets you override built-ins like page or context, so every test starts from a known state without repeating setup.',
+          'Scope decides cost: a page is cheap and test-scoped, while a seeded dataset or a storageState is expensive and belongs in worker scope.',
+          'Keep page objects thin \u2014 locators plus intent-level actions \u2014 and put the business assertions in the test so failures stay readable.',
+          'A fixture that reaches into the DOM hides coupling: use fixtures for state, helpers for interaction, assertions for intent.'
         ]
       }
     ]
@@ -759,6 +955,71 @@ async def pool(tasks, limit: int = 4):
     await asyncio.gather(*(run(i, t) for i, t in enumerate(tasks)))
     return results`
         }
+      },
+      {
+        id: 'm2-pw-poll', title: 'Build your own web-first assertion (polling)', tags: ['Playwright', 'expect', 'Timeouts'],
+        detail: 'Playwright assertions re-query until they pass or time out, and that is the single biggest reason the framework eliminates timing flakiness. Writing the primitive yourself proves you understand the difference between a check and a race.',
+        bullets: [
+          'Loop against a deadline rather than a fixed attempt count, so a slow environment extends the wait instead of failing the test.',
+          'Carry the last error into the timeout message \u2014 a bare "timed out" wastes the first ten minutes of any triage session.',
+          'Only short-circuit on falsy if the condition can distinguish "not there yet" from "genuinely false".',
+          'Unit test it with a fake clock; never let the test harness itself sleep for real.'
+        ],
+        code: {
+          js: `async function waitFor(condition, opts = {}) {
+  const { timeout = 5000, interval = 100, message = 'condition not met' } = opts;
+  const deadline = Date.now() + timeout;
+  let attempts = 0;
+  let lastError = null;
+
+  while (Date.now() < deadline) {
+    attempts++;
+    try {
+      const value = await condition();
+      if (value) return value;
+    } catch (err) {
+      lastError = err;                 // keep the last failure for diagnostics
+    }
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  const error = new Error('Timeout ' + timeout + 'ms after ' + attempts + ' attempts: ' + message);
+  if (lastError) error.cause = lastError;
+  throw error;
+}
+
+// Wait for an outcome, never for a duration
+await waitFor(
+  () => page.locator('.toast.success').isVisible(),
+  { timeout: 3000, message: 'success toast never appeared' }
+);`,
+          py: `import asyncio, time
+
+async def wait_for(condition, timeout=5.0, interval=0.1, message='condition not met'):
+    deadline = time.monotonic() + timeout
+    attempts, last_error = 0, None
+
+    while time.monotonic() < deadline:
+        attempts += 1
+        try:
+            value = condition()
+            if asyncio.iscoroutine(value):
+                value = await value
+            if value:
+                return value
+        except Exception as exc:
+            last_error = exc
+
+        await asyncio.sleep(interval)
+
+    detail = f' (last error: {last_error})' if last_error else ''
+    raise TimeoutError(
+        f'Timeout {timeout}s after {attempts} attempts: {message}{detail}'
+    )
+
+# Wait for an outcome, never for a duration
+# await wait_for(lambda: page.locator('.toast.success').is_visible(), timeout=3)`
+        }
       }
     ]
   },
@@ -930,6 +1191,68 @@ def matches(test: Test, expr: str) -> bool:
 
     return evaluate(parse_or())`
         }
+      },
+      {
+        id: 'm2-pw-auth', title: 'Login once, reuse everywhere: a storage-state helper', tags: ['Playwright', 'storageState', 'Worker scope'],
+        detail: 'A classic senior task: given a suite where every test burns 1.5 seconds on a login form, design and implement the mechanism that authenticates once and reuses the session. The interesting part is not the login \u2014 it is scope, isolation and who owns the file.',
+        bullets: [
+          'Write the session file once per worker or per run, never per test \u2014 this is worker-scoped state under another name.',
+          'One storageState per role, so a permission test becomes a fixture swap rather than a different login flow.',
+          'Assert the redirect after login: an unverified login produces a session file that silently breaks every test that follows.',
+          'Keep exactly one test that drives the real login form, so a login regression is one obvious failure instead of hundreds.'
+        ],
+        code: {
+          js: `const { chromium } = require('@playwright/test');
+const fs = require('fs/promises');
+
+async function saveSession({ baseURL, email, password, out = 'storage/user.json' }) {
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.waitForURL('**/dashboard');          // assert the redirect really happened
+
+  await fs.mkdir('storage', { recursive: true });
+  await context.storageState({ path: out });      // cookies + localStorage, one file
+  await browser.close();
+  return out;
+}
+
+// playwright.config.ts - run it once, then reuse it everywhere
+// projects: [
+//   { name: 'setup',    testMatch: /.*\\.setup\\.ts/ },
+//   { name: 'chromium', dependencies: ['setup'], use: { storageState: 'storage/user.json' } }
+// ]`,
+          py: `import json, pathlib
+from playwright.sync_api import sync_playwright
+
+def save_session(base_url, email, password, out='storage/user.json'):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        context = browser.new_context(base_url=base_url)
+        page = context.new_page()
+
+        page.goto('/login')
+        page.get_by_label('Email').fill(email)
+        page.get_by_label('Password').fill(password)
+        page.get_by_role('button', name='Sign in').click()
+        page.wait_for_url('**/dashboard')            # assert the redirect really happened
+
+        pathlib.Path('storage').mkdir(exist_ok=True)
+        state = context.storage_state()              # dict: cookies + origins
+        pathlib.Path(out).write_text(json.dumps(state, indent=2))
+        browser.close()
+    return out
+
+# conftest.py - session-scoped, then handed to browser.new_context()
+# @pytest.fixture(scope='session')
+# def storage_state(...):
+#     return save_session(BASE_URL, EMAIL, PASSWORD)`
+        }
       }
     ]
   }
@@ -1005,6 +1328,17 @@ const M3 = [
           result: 'The suite became about 16 seconds faster per browser, the principle ended three recurring debates, and Architecture Decision Records became our default mechanism for test-design disagreements.'
         },
         watch: 'Evidence rather than opinion, a reusable principle, a documented decision, and visible respect for the other person\u2019s reasoning.'
+      },
+      {
+        id: 'm3-pw-migration', title: 'Migrating a suite from Selenium or Cypress to Playwright', tags: ['Migration', 'Playwright', 'Change management'],
+        detail: 'A migration question tests judgement more than syntax: how you prove the case, how you avoid a big-bang rewrite, and how you stop two suites running side by side forever.',
+        star: {
+          situation: 'Our Selenium suite took 45 minutes across a Grid, every failure needed a screenshot and a guess, and a new product line was about to double the coverage we needed.',
+          task: 'Move to a faster, more debuggable stack without freezing delivery or losing existing coverage.',
+          action: 'I ran a two-week spike on one critical journey and recorded runtime, flake rate and time-to-diagnosis for both stacks, then wrote the numbers into an ADR so the decision was evidence rather than preference. We migrated incrementally: new tests went into Playwright only, shared API helpers were exposed to both stacks, and I paired with two engineers on the first ten specs so the patterns were established before scale. Traces were enabled from day one, and we deleted a Selenium spec only once its Playwright replacement had been green for two weeks.',
+          result: 'End-to-end runtime fell from 45 minutes to 9, flake from 11% to under 1%, and failure diagnosis from roughly 20 minutes to about 2. The migration finished within one quarter with no coverage gap and no release blocked by it.'
+        },
+        watch: 'Measured evidence, incremental rather than big-bang, pairing to spread the skill, and a deletion rule that stops two suites surviving side by side.'
       }
     ]
   },
@@ -1055,6 +1389,17 @@ const M3 = [
           result: 'Testability changes appeared in an estimated 90% of new stories within a quarter, automation PRs from engineers outnumbered mine, and the two squads stopped deferring verification work.'
         },
         watch: 'Influence through pairing and evidence rather than escalation, and changing a default instead of adding a rule.'
+      },
+      {
+        id: 'm3-pw-scale', title: 'Cutting CI feedback below 10 minutes with Playwright', tags: ['Playwright', 'Sharding', 'Metrics'],
+        detail: 'A delivery-and-scale story that shows you optimise from measurement rather than folklore, and that sharding versus parallelism is not just a definition you memorised.',
+        star: {
+          situation: 'The pull request pipeline had crept up to 28 minutes; engineers were merging without waiting for end-to-end results, and the nightly run had quietly become the real gate.',
+          task: 'Get merge-blocking feedback under 10 minutes without dropping coverage or hiding flakiness.',
+          action: 'I profiled the suite first and found 60% of the wall clock inside 30 specs that logged in per test, plus 8 more waiting on a third party. We moved authentication to a worker-scoped storageState fixture, stubbed the third party with page.route, tagged the suite with grep so pull requests ran smoke only, and sharded the nightly run across four CI jobs balanced on historical durations rather than test counts. I published a per-spec duration report and set a rule that any test over 5 seconds had to justify itself.',
+          result: 'The pull request pipeline fell from 28 to 7 minutes and the nightly run from 34 to 9 minutes of wall clock, while coverage actually grew because we stopped skipping it. The duration report kept slow tests visible, so the gain held rather than eroding over the next quarter.'
+        },
+        watch: 'Profiling before optimising, real numbers, sharding and parallelism used correctly, and a guardrail that keeps the improvement.'
       }
     ]
   }
@@ -1160,6 +1505,31 @@ const QUESTIONS = [
     id: 'q20', tags: ['Fundamentals', 'Terminology'],
     q: 'What is the difference between a test case, a test scenario and a test suite?',
     a: 'A test scenario describes what needs to be verified in business terms, such as "a user can recover a forgotten password". A test case is the concrete, step-by-step execution of that scenario with preconditions, data and expected results. A suite is an organised collection of cases, typically scoped by feature, risk or execution frequency \u2014 smoke, regression, nightly. In an automation context I map scenarios to descriptive test titles, cases to parameterised examples, and suites to CI jobs or tags, which keeps the vocabulary consistent between manual and automated work.'
+  },
+  {
+    id: 'q21', tags: ['Playwright', 'Fixtures'],
+    q: 'Explain Playwright\u2019s fixture model and how you would write a custom one.',
+    a: 'Fixtures are named dependencies that Playwright creates before a test and disposes after it, with an explicit scope: test-scoped, worker-scoped or built-in. A custom one uses test.extend, declares its dependencies and its teardown, and hands the test its value \u2014 for example a logged-in context or a seeded API client. The properties that matter are that fixtures can override built-ins such as page or context, that they compose instead of inheriting, and that scope decides cost: anything expensive but safely shareable, like a seeded dataset or a saved storage state, belongs in worker scope. The payoff is that setup lives in one typed place instead of beforeEach blocks scattered across files.'
+  },
+  {
+    id: 'q22', tags: ['Playwright', 'Auth', 'Performance'],
+    q: 'How do you share authentication across a large Playwright suite without logging in for every test?',
+    a: 'I authenticate once and persist the result as storageState \u2014 cookies and local storage captured by an auth setup project \u2014 then every project that needs a session declares a dependency on it instead of driving the login form. Each role gets its own storage state, so a permission test becomes a fixture swap rather than a different flow, and any test that mutates the session gets a genuinely isolated context so it cannot poison the shared state. I keep exactly one test that exercises the login form itself, which turns a login regression into one obvious failure instead of hundreds of confusing ones.'
+  },
+  {
+    id: 'q23', tags: ['Playwright', 'Network', 'Test design'],
+    q: 'When would you reach for page.route, and what are the traps?',
+    a: 'I use it to remove nondeterminism and to reach states that are awkward to create legitimately: stubbing a slow or paid third party, forcing a 500 to exercise the error path, rewriting a price to hit a boundary, or capturing the payload a test needs to assert on. The traps are real \u2014 an interceptor left registered keeps stubbing later tests, handlers must be registered before page.goto or they lose the race, stubbing hides contract drift because you are asserting against your own fake, and it can mask a genuine product bug if you stub the very call that was failing. I scope routes tightly, always unroute during cleanup, and never stub the behaviour under test.'
+  },
+  {
+    id: 'q24', tags: ['Playwright', 'Debugging', 'CI'],
+    q: 'A Playwright test passes locally but fails in CI. Walk me through your diagnosis.',
+    a: 'I treat it as a reproducibility problem rather than a mystery. First I turn on trace on-first-retry so the failing CI run ships its evidence. Then I compare the environments instead of guessing: viewport and device scale, headless versus headed rendering, timezone and locale, the container browser version, outbound network access to third parties, and CPU speed, which is where most timing-sensitive failures actually live. I open the trace timeline first, then the console and network output, looking specifically for an unstubbed external call or a wait that assumes a fast machine. The fix is always to remove the environmental dependency \u2014 deterministic data, condition-based waits, stubbed externals, fixed fonts and viewport \u2014 and only then consider serialising the test if it turns out to be genuinely order dependent.'
+  },
+  {
+    id: 'q25', tags: ['Playwright', 'Files', 'Automation'],
+    q: 'Walk me through how you would automate a file download and a file upload in Playwright.',
+    a: 'For downloads I click the trigger, accept Playwright\u2019s download event into a temporary path, and then assert on the suggested filename and on the file itself \u2014 size, a header line, or a parse of its contents \u2014 rather than trusting that a dialog opened. For uploads I prefer setInputFiles on the file input because it is stable and skips custom widget choreography, with a small fixture file committed to the repository so the test stays self-contained. Crucially I assert the server-side effect, not just the filename chip in the UI, and I have CI upload the downloaded artifacts so a failure can be inspected. The classic pitfall is asserting only on the client: the interface can say "Downloaded" while the file on disk is empty.'
   }
 ];
 /* ============================================================
@@ -1178,7 +1548,7 @@ const MODULES = [
   { id: 'm1', short: 'Architecture', label: 'Technical & Automation Architecture', accent: 'indigo', icon: ICONS.m1,
     tagline: 'Selenium, Playwright, Cypress and WebdriverIO execution models, CI/CD pipelines, parallel execution, flaky test management and reporting frameworks.', groups: M1 },
   { id: 'm2', short: 'Coding', label: 'Coding & Algorithms', accent: 'sky', icon: ICONS.m2,
-    tagline: 'QA-flavoured coding tasks: string and log manipulation, data structures, a custom test runner, retry with backoff and concurrency limiting \u2014 in JavaScript/TypeScript or Python.', groups: M2 },
+    tagline: 'QA-flavoured coding tasks: string and log manipulation, data structures, a custom test runner, retry with backoff, concurrency limiting and Playwright-style helpers \u2014 in JavaScript/TypeScript or Python.', groups: M2 },
   { id: 'm3', short: 'Leadership', label: 'Behavioral & Leadership', accent: 'emerald', icon: ICONS.m3,
     tagline: 'STAR-method prompts for senior-level situations, written as models you can rehearse aloud in professional technical English.', groups: M3 },
   { id: 'm4', short: 'Mock Interview', label: 'Mock Interview Simulator', accent: 'amber', icon: ICONS.m4,
