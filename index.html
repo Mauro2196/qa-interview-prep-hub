@@ -222,7 +222,7 @@
 
   <!-- ================= MODULE TABS ================= -->
   <nav id="modules" aria-label="Preparation modules" class="mt-10 scroll-mt-6">
-    <div id="tabs" class="flex gap-2 overflow-x-auto pb-2 thin-scroll sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible lg:pb-0"></div>
+    <div id="tabs" class="flex gap-2 overflow-x-auto pb-2 thin-scroll sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 lg:overflow-visible lg:pb-0"></div>
   </nav>
 
   <!-- ================= MODULE BODY ================= -->
@@ -1405,6 +1405,483 @@ const M3 = [
   }
 ];
 
+/* ============================================================
+   MODULE 5 - DATA & DATABASE TESTING
+   ============================================================ */
+const M5 = [
+  {
+    name: 'Test data & privacy',
+    hint: 'The most common cause of suite collapse at scale. Start from ownership of data, not from tools.',
+    items: [
+      {
+        id: 'm5-testdata', title: 'Test data management strategy', tags: ['Test data', 'Factories', 'Isolation'],
+        detail: 'Shared, stale or mutated data is the single most common cause of a suite collapsing as it scales. A senior answer starts from ownership: every test creates what it needs through a public interface, scoped by a run identifier, and cleans itself up or expires automatically.',
+        bullets: [
+          'Factories over SQL inserts: build data through the API so business rules, defaults and side effects stay honest.',
+          'Run-scoped identifiers (runId + testId) so parallel workers never collide on the same unique constraint.',
+          'Tier the data by speed: in-memory or containerised for fast checks, a masked subset for integration, a dedicated snapshot for performance.',
+          'Refresh policy: never depend on a golden record another team can mutate. If data must be shared, make it read-only and versioned.',
+          'Make the teardown a predicate, not a list \u2014 delete by run_id so a crashed test cannot leave debris behind.'
+        ],
+        code: {
+          sql: `-- Seed: one run-scoped dataset per test execution ($1 = run_id)
+INSERT INTO customers (email, run_id)
+SELECT 'user-' || i || '@' || $1 || '.test', $1
+FROM generate_series(1, 25) AS i;
+
+-- Every seeded order belongs to a seeded customer, tagged with the same run
+INSERT INTO orders (customer_id, status, total_cents, run_id)
+SELECT c.id, 'new', 0, $1
+FROM customers c
+WHERE c.run_id = $1;
+
+-- Teardown is a single predicate, never a hard-coded list of ids
+DELETE FROM orders    WHERE run_id = $1;
+DELETE FROM customers WHERE run_id = $1;`,
+          py: `"""Factory pattern: tests build data through the API, not through SQL."""
+import itertools, uuid, requests
+
+_run = uuid.uuid4().hex[:8]
+_seq = itertools.count(1)
+
+def unique(prefix='user'):
+    """Guaranteed-unique natural key, safe under full parallelism."""
+    return f'{prefix}-{next(_seq)}-{_run}@qa.test'
+
+def customer(api, **overrides):
+    payload = {'email': unique(), 'country': 'ES', 'plan': 'pro'}
+    payload.update(overrides)
+    res = api.post('/api/customers', json=payload)
+    res.raise_for_status()
+    return res.json()
+
+def order(api, customer_id, lines, **overrides):
+    body = {
+        'customerId': customer_id,
+        'currency': 'EUR',
+        'lines': [{'sku': l['sku'], 'qty': l.get('qty', 1)} for l in lines],
+    }
+    body.update(overrides)
+    res = api.post('/api/orders', json=body)
+    res.raise_for_status()
+    return res.json()
+
+def cleanup(api, customer_id):
+    """Best effort; the run_id sweep in the seed SQL is the real backstop."""
+    api.delete('/api/customers/' + customer_id)`
+        }
+      },
+      {
+        id: 'm5-pii', title: 'Data masking, PII & compliant environments', tags: ['PII', 'Masking', 'GDPR'],
+        detail: 'Copying production into staging is the fastest way to create a security incident. The senior answer separates shape from identity: the masked set must behave exactly like the real one for every query, while containing nothing that identifies a person.',
+        bullets: [
+          'Static masking for long-lived environments, on-the-fly masking for ephemeral ones \u2014 a cost and latency trade-off, not a preference.',
+          'Deterministic masking keeps join keys stable and referential integrity intact; naive randomisation destroys both and turns integration tests into fiction.',
+          'Subsetting: take 1% of production rows but preserve every parent-child relationship so the data still behaves like production.',
+          'Prove it, do not assume it: format scans for emails, phone numbers, card-shaped sequences and national identifiers in every restored environment, wired into CI so a leak fails the build.',
+          'Test the negative case deliberately \u2014 seed a known raw value on purpose and assert that it does not survive the run.'
+        ]
+      },
+      {
+        id: 'm5-synthetic', title: 'Synthetic data & property-based testing', tags: ['Generators', 'Invariants', 'Boundaries'],
+        detail: 'When the real distribution is unavailable or forbidden, you generate it. The advanced move is to generate from a model of the domain and then assert invariants that must hold for every possible input, instead of asserting against one hand-written example.',
+        bullets: [
+          'Generate the happy path, then apply targeted mutators for boundaries: empty, one, max, max+1, null-heavy, unicode, zero-width, extremely long.',
+          'Property-based testing flips the assertion: for any order, the total equals the sum of its lines and is never negative \u2014 thousands of cases, none of them hand-written.',
+          'Fix the seed and print it on failure so every generated case is reproducible.',
+          'Deterministic by default in CI, randomised on a nightly schedule: you get breadth without a flaky build.',
+          'Never generate data that violates a database constraint and then assert the constraint fails \u2014 assert the constraint error itself instead.'
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Database & schema validation',
+    hint: 'Assertions the database already knows how to answer. The empty result set is the pass condition.',
+    items: [
+      {
+        id: 'm5-sql', title: 'SQL assertions beyond the happy path', tags: ['SQL', 'Constraints', 'Reconciliation'],
+        detail: 'Most teams test that a write returns 201 and never read the row back. SQL assertions check the invariants the database already understands: referential integrity, uniqueness of the natural key, domain membership, and money reconciling to the line items that produced it.',
+        bullets: [
+          'A query that returns rows is a failing assertion, so an empty result set is the pass condition \u2014 which makes them trivial to wire into CI.',
+          'Left-join anti-patterns find orphans: no order without a customer, no line without an order.',
+          'Group-by-having catches duplicates on the declared grain, which is where the expensive bugs hide.',
+          'Money must reconcile at line level: a total that disagrees with its own lines is a defect regardless of what the UI displays.',
+          'Test the database guarantee too \u2014 transactions and isolation levels behave differently under concurrency, so exercise two writers rather than one.'
+        ],
+        code: {
+          sql: `-- 1. Referential integrity: orders with no customer
+SELECT o.id
+FROM orders o
+LEFT JOIN customers c ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+-- 2. Uniqueness of a natural key
+SELECT email, COUNT(*) AS n
+FROM users
+GROUP BY email
+HAVING COUNT(*) > 1;
+
+-- 3. Domain membership: no value outside the allowed set
+SELECT id, status
+FROM orders
+WHERE status NOT IN ('new', 'paid', 'shipped', 'cancelled');
+
+-- 4. Money reconciles to the lines that produced it
+SELECT o.id, o.total_cents,
+       SUM(l.price_cents * l.qty) AS lines_cents,
+       o.total_cents - SUM(l.price_cents * l.qty) AS delta
+FROM orders o
+JOIN order_lines l ON l.order_id = o.id
+GROUP BY o.id, o.total_cents
+HAVING o.total_cents <> SUM(l.price_cents * l.qty);`,
+          py: `"""Turn SQL checks into assertions a test runner can own."""
+
+def rows(conn, sql, params=()):
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+def assert_no_orphan_orders(conn):
+    bad = rows(conn, """
+        SELECT o.id FROM orders o
+        LEFT JOIN customers c ON c.id = o.customer_id
+        WHERE c.id IS NULL
+    """)
+    assert not bad, f'{len(bad)} orders without a customer, first: {bad[:5]}'
+
+def assert_order_totals_reconcile(conn, tolerance_cents=0):
+    bad = rows(conn, """
+        SELECT o.id, o.total_cents, SUM(l.price_cents * l.qty) AS lines_cents
+        FROM orders o
+        JOIN order_lines l ON l.order_id = o.id
+        GROUP BY o.id, o.total_cents
+        HAVING ABS(o.total_cents - SUM(l.price_cents * l.qty)) > %s
+    """, (tolerance_cents,))
+    assert not bad, f'total does not equal its lines, first: {bad[:5]}'
+
+# Convention: every check returns rows. Empty is a pass, and the
+# offending keys travel with the failure message.
+def check(name, conn, sql, params=()):
+    bad = rows(conn, sql, params)
+    assert not bad, f'{name}: {len(bad)} violations, first: {bad[:5]}'`
+        }
+      },
+      {
+        id: 'm5-migration', title: 'Schema migrations & backward compatibility', tags: ['Migrations', 'Rollback', 'CI'],
+        detail: 'A migration has two audiences: the new code and the old code that is still running. Interviewers use this to check whether you treat schema change as a two-phase release or as a single irreversible step.',
+        bullets: [
+          'Expand, migrate, contract: add nullable columns first, backfill, switch reads, and only drop the old column in a later release.',
+          'Run the migration against production-shaped data in CI, then run the full suite on top of it \u2014 a migration that succeeds on empty tables proves nothing.',
+          'Backward compatibility: keep the previous application version pointed at the migrated database for the length of the rollout window.',
+          'Assert reversibility; a rollback that cannot restore the old shape turns a small failure into an outage.',
+          'Never backfill and deploy the reader in the same step \u2014 long-running writes against a half-migrated table is a guaranteed incident.'
+        ]
+      },
+      {
+        id: 'm5-api-data', title: 'Validating API payloads against the persisted row', tags: ['Contracts', 'Read-back', 'zod'],
+        detail: 'The API can describe the row, but the row is the truth. Contract validation on the payload plus a raw read-back on the database closes the gap between what was returned and what was stored, which is exactly where silent data loss hides.',
+        bullets: [
+          'Validate the payload with a schema first (zod, Pydantic), so a contract break fails clearly before the comparison muddies the message.',
+          'Read back with raw SQL rather than through the ORM, so you verify the storage layer instead of a second layer that may share the same bug.',
+          'Compare derived values too: the total must equal the sum of its lines, computed from what was persisted rather than what the payload claimed.',
+          'Push the invariant into the database as a check constraint \u2014 cheaper, and it does not depend on anyone remembering to run the tests.',
+          'Round-trip through a second read; a value that survives the first read but not a serialise-deserialise cycle is the classic lossless-conversion bug.'
+        ],
+        code: {
+          ts: `import { z } from 'zod';
+
+const OrderPayload = z.object({
+  id: z.string().uuid(),
+  totalCents: z.number().int().nonnegative(),
+  status: z.enum(['new', 'paid', 'shipped', 'cancelled']),
+  lines: z.array(z.object({
+    priceCents: z.number().int(),
+    qty: z.number().int().positive()
+  }))
+});
+
+test('API payload matches the row that was actually persisted', async () => {
+  const created = await api.post('/orders', orderFixture());
+  const payload = OrderPayload.parse(created.data);   // the contract
+
+  // The API can describe the row; the row is the truth.
+  const row = await db.one(
+    'SELECT id, total_cents, status FROM orders WHERE id = $1',
+    [payload.id]
+  );
+  expect(row.total_cents).toBe(payload.totalCents);
+  expect(row.status).toBe(payload.status);
+
+  const lines = await db.many(
+    'SELECT price_cents, qty FROM order_lines WHERE order_id = $1',
+    [payload.id]
+  );
+  const persisted = lines.reduce((sum, l) => sum + l.price_cents * l.qty, 0);
+  expect(persisted).toBe(payload.totalCents);
+});`,
+          sql: `-- Independent read-back: no application code involved
+SELECT o.id,
+       o.status,
+       o.total_cents,
+       COALESCE(SUM(l.price_cents * l.qty), 0) AS lines_cents,
+       o.total_cents
+         - COALESCE(SUM(l.price_cents * l.qty), 0) AS delta
+FROM orders o
+LEFT JOIN order_lines l ON l.order_id = o.id
+WHERE o.id = :order_id
+GROUP BY o.id, o.status, o.total_cents;
+
+-- The constraint that makes the assertion unnecessary at runtime:
+ALTER TABLE order_lines
+  ADD CONSTRAINT qty_positive CHECK (qty > 0) NOT VALID;`
+        }
+      }
+    ]
+  },
+  {
+    name: 'Pipelines & transformations',
+    hint: 'Three separate questions: did the schema arrive, did the right rows arrive, and did the rule compute correctly.',
+    items: [
+      {
+        id: 'm5-etl', title: 'ETL / ELT transformation testing', tags: ['ETL', 'Grain', 'Idempotency'],
+        detail: 'Transformation testing answers three questions that teams usually collapse into one: did the schema arrive intact, did the right number of rows arrive, and did the business rule actually compute correctly? Each needs its own assertion and its own fixture.',
+        bullets: [
+          'Hand-computable fixtures beat golden files. A snapshot tells you something changed; a five-row fixture with a known answer tells you whether it is right.',
+          'Assert the grain explicitly \u2014 exactly one row per key, tested with group-by-having rather than a glance at a dashboard.',
+          'Prove idempotency: run the same window twice and assert that counts and sums per key are unchanged.',
+          'Boundary cases carry most of the weight: empty input, a single row, an all-null dimension, unicode keys, and a batch split exactly on its boundary.',
+          'Late-arriving data needs a watermark test: assert after the allowed lateness, not immediately after the run.'
+        ],
+        code: {
+          py: `"""Pipeline assertions: schema, grain, domain, idempotency, volume."""
+import pandas as pd
+
+EXPECTED = {'order_id', 'customer_id', 'order_date', 'total_cents', 'loaded_at'}
+STATUSES = {'new', 'paid', 'shipped', 'cancelled'}
+
+def assert_schema(df, expected=EXPECTED):
+    missing = expected - set(df.columns)
+    extra = set(df.columns) - expected
+    assert not missing, f'missing columns: {sorted(missing)}'
+    assert not extra, f'unexpected columns: {sorted(extra)}'
+
+def assert_grain(df, grain=('order_id', 'order_date')):
+    """Exactly one row per key: the invariant the model promises."""
+    dupes = int(df.duplicated(subset=list(grain), keep=False).sum())
+    assert dupes == 0, f'{dupes} rows violate the grain {grain}'
+
+def assert_domain(df, column='status', allowed=STATUSES):
+    bad = set(df[column].dropna().unique()) - allowed
+    assert not bad, f'illegal values in {column}: {bad}'
+
+def assert_idempotent(load):
+    """Running the same window twice must not change the result."""
+    before, after = load(), load()
+    key = ['order_id']
+    pd.testing.assert_frame_equal(
+        before.sort_values(key).reset_index(drop=True),
+        after.sort_values(key).reset_index(drop=True),
+    )
+
+def assert_volume(baseline, actual, tolerance=0.02):
+    assert abs(actual - baseline) <= baseline * tolerance, \\
+        f'{actual} vs {baseline} exceeds {tolerance:.0%} tolerance'`,
+          sql: `-- Grain check: any row returned here is a duplicate key
+SELECT order_id, order_date, COUNT(*) AS n
+FROM {{ ref('fct_orders') }}
+GROUP BY order_id, order_date
+HAVING COUNT(*) > 1;
+
+-- Row-count drift against the source, with a declared tolerance
+WITH s AS (SELECT COUNT(*) AS src_n FROM {{ ref('stg_orders') }}),
+     t AS (SELECT COUNT(*) AS tgt_n FROM {{ ref('fct_orders') }})
+SELECT s.src_n, t.tgt_n, ABS(s.src_n - t.tgt_n) AS delta
+FROM s, t
+WHERE ABS(s.src_n - t.tgt_n) > GREATEST(s.src_n * 0.02, 50);
+
+-- Freshness: the pipeline stopping silently is also a failure
+SELECT MAX(loaded_at) AS last_loaded_at
+FROM {{ ref('fct_orders') }}
+WHERE loaded_at >= CURRENT_DATE - INTERVAL '1 day';`
+        }
+      },
+      {
+        id: 'm5-quality', title: 'Data quality dimensions & expectation tests', tags: ['dbt', 'Expectations', 'Quality'],
+        detail: 'Data quality is not one property. Completeness, uniqueness, validity, accuracy and timeliness fail in different ways and need different evidence \u2014 and only accuracy requires a second source of truth, which is the part teams most often get wrong.',
+        bullets: [
+          'Completeness: not-null per required column, plus a row count per load window.',
+          'Uniqueness: the declared grain is unique, expressed as a group-by-having check.',
+          'Validity: values sit inside their domain \u2014 enums, ranges, formats and referential integrity.',
+          'Accuracy: needs an independent source, so it is reconciliation against the system of record rather than an internal rule.',
+          'Timeliness: freshness of the load timestamp against the SLA, alerting on a pipeline that stopped without anyone noticing.',
+          'Attach them to the model definition (dbt tests, Great Expectations, SodaCL) so they run where the code changes, not in a nightly job nobody owns.'
+        ],
+        code: {
+          sql: `-- tests/assert_fct_orders_valid.sql  (singular dbt test)
+-- A dbt test returns the VIOLATING rows. Zero rows means pass.
+SELECT order_id, status, total_cents, order_date, loaded_at
+FROM {{ ref('fct_orders') }}
+WHERE status IS NULL
+   OR status NOT IN ('new', 'paid', 'shipped', 'cancelled')   -- validity
+   OR total_cents <= 0                                        -- accuracy
+   OR order_date > CURRENT_DATE                               -- future-dated
+   OR loaded_at < CURRENT_DATE - INTERVAL '1 day';            -- timeliness`,
+          py: `import pandas as pd
+
+def completeness(df, required):
+    nulls = {c: int(df[c].isna().sum()) for c in required}
+    assert not any(nulls.values()), f'nulls found: {nulls}'
+
+def uniqueness(df, grain):
+    dupes = int(df.duplicated(subset=grain, keep=False).sum())
+    assert dupes == 0, f'{dupes} duplicate rows on grain {grain}'
+
+def validity(df, domains):
+    for column, allowed in domains.items():
+        bad = set(df[column].dropna().unique()) - set(allowed)
+        assert not bad, f'{column}: illegal values {sorted(bad)}'
+
+def accuracy(df, rule):
+    """Cross-column truth, asserted against the data itself."""
+    violations = df.query(rule)
+    assert violations.empty, f'{len(violations)} rows violate: {rule}'
+
+def timeliness(df, column, max_age_minutes=15):
+    latest = pd.to_datetime(df[column], utc=True).max()
+    age = (pd.Timestamp.utcnow() - latest).total_seconds() / 60
+    assert age <= max_age_minutes, f'last load was {age:.0f} minutes old'
+
+# usage:  accuracy(df, 'total_cents <> price_cents * qty')`
+        }
+      },
+      {
+        id: 'm5-recon', title: 'Reconciliation & freshness checks', tags: ['Reconciliation', 'SLA', 'Variance'],
+        detail: 'Reconciliation is the only quality dimension that needs a second source of truth. The interview question is rarely whether you can write the query \u2014 it is what tolerance you allow, and precisely where you apply it.',
+        bullets: [
+          'Reconcile per key, never as one global number: a single total can hide one customer over-counted by a thousand.',
+          'Compare counts and sums together, and compare business-critical columns rather than just row counts.',
+          'Declare the tolerance before the data arrives \u2014 a tolerance invented after the discrepancy is a way of accepting a defect.',
+          'Rank by variance and ship the offending keys, not just the delta, so the report is immediately actionable.',
+          'Fail on money, warn on volume, unless the pipeline is genuinely lossy by contract.'
+        ],
+        code: {
+          sql: `-- Source vs target, per key, ranked by variance.
+-- Every row returned is a discrepancy the pipeline must explain.
+WITH src AS (
+  SELECT customer_id, COUNT(*) AS src_rows, SUM(amount_cents) AS src_cents
+  FROM billing.stripe_charges
+  WHERE settled_at >= DATE '2026-10-01'
+  GROUP BY customer_id
+),
+tgt AS (
+  SELECT customer_id, COUNT(*) AS tgt_rows, SUM(amount_cents) AS tgt_cents
+  FROM warehouse.fct_payments
+  WHERE settled_at >= DATE '2026-10-01'
+  GROUP BY customer_id
+)
+SELECT COALESCE(s.customer_id, t.customer_id)                    AS customer_id,
+       COALESCE(src_rows, 0)                                     AS src_rows,
+       COALESCE(tgt_rows, 0)                                     AS tgt_rows,
+       COALESCE(src_cents, 0) - COALESCE(tgt_cents, 0)           AS variance_cents
+FROM src s
+FULL OUTER JOIN tgt t ON t.customer_id = s.customer_id
+WHERE COALESCE(src_rows, 0) <> COALESCE(tgt_rows, 0)
+   OR ABS(COALESCE(src_cents, 0) - COALESCE(tgt_cents, 0)) > 0
+ORDER BY ABS(COALESCE(src_cents, 0) - COALESCE(tgt_cents, 0)) DESC
+LIMIT 100;`,
+          py: `import textwrap
+
+RECON_SQL = textwrap.dedent("""
+    SELECT COALESCE(s.customer_id, t.customer_id)               AS customer_id,
+           COALESCE(s.src_rows, 0)                              AS src_rows,
+           COALESCE(t.tgt_rows, 0)                              AS tgt_rows,
+           COALESCE(s.src_cents, 0) - COALESCE(t.tgt_cents, 0)  AS variance_cents
+    FROM src_counts s
+    FULL OUTER JOIN tgt_counts t USING (customer_id)
+    WHERE COALESCE(s.src_rows, 0) <> COALESCE(t.tgt_rows, 0)
+       OR ABS(COALESCE(s.src_cents, 0) - COALESCE(t.tgt_cents, 0)) > 0
+""")
+
+def assert_reconciled(conn, tolerance_cents=0, limit=20):
+    """Zero rows is a pass. Anything else must be readable, not merely non-empty."""
+    with conn.cursor() as cur:
+        cur.execute(RECON_SQL)
+        rows = cur.fetchall()
+
+    if not rows:
+        return
+
+    worst = sorted(rows, key=lambda r: abs(r[3]), reverse=True)[:limit]
+    report = '\\n'.join(
+        f'  customer={r[0]:<14} src={r[1]:>8} tgt={r[2]:>8} variance={r[3]:>10}c'
+        for r in worst
+    )
+    raise AssertionError(
+        f'{len(rows)} keys do not reconcile (tolerance {tolerance_cents}c)\\n{report}'
+    )`
+        }
+      }
+    ]
+  },
+  {
+    name: 'Scale, streams & observability',
+    hint: 'What changes when the table is 2 TB and the data never stops arriving.',
+    items: [
+      {
+        id: 'm5-streaming', title: 'Event streams & CDC correctness', tags: ['Kafka', 'CDC', 'Idempotency'],
+        detail: 'Streaming breaks the assumptions batch tests rely on: there is no single final state, ordering is guaranteed only per key, and at-least-once delivery makes duplicates entirely normal. Tests must assert invariants that survive replay, not a snapshot taken in time.',
+        bullets: [
+          'Assert on the sink, not the stream: wait for the aggregate to converge, then assert exactly once per key.',
+          'Prove idempotency deliberately \u2014 replay the same offset range and confirm that counts and sums do not move.',
+          'Schema compatibility belongs in CI: a BACKWARD/FORWARD check in the registry beats discovering a breaking change in production.',
+          'Late and out-of-order events need a watermark test: assert after the allowed lateness, never immediately.',
+          'Poison messages: assert the consumer dead-letters or skips rather than blocking the entire partition.'
+        ]
+      },
+      {
+        id: 'm5-volume', title: 'Data volume, partitions & query budgets', tags: ['Performance', 'Partitioning', 'Cost'],
+        detail: 'Tests that pass on a thousand rows routinely fail at a hundred million. The senior answer is about testing the shape of production: the query plan, the partition pruning, the memory ceiling and the cloud bill, not merely the correctness of a sample.',
+        bullets: [
+          'Volume tests assert a time or memory budget, not simply that the query returned.',
+          'Assert the plan and not only the result: EXPLAIN should show partition pruning, or you will pay for a full scan forever.',
+          'Test the boundary deliberately: empty table, one row, exactly at the batch size, one past it, and a null-heavy column.',
+          'Cost guardrail: fail the pipeline when a query scans more bytes than the agreed budget \u2014 that protects the cloud spend as much as the SLA.',
+          'Refresh the performance fixtures regularly; a stale 10 GB dataset proves nothing about the 2 TB table it used to represent.'
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Data testing in practice',
+    hint: 'Structure every answer as Situation \u2192 Task \u2192 Action \u2192 Result, quantify the Result, and never blame an individual.',
+    items: [
+      {
+        id: 'm5-star-strategy', title: 'Building a data quality practice from scratch', tags: ['Strategy', 'Influence'],
+        detail: 'The data-flavoured counterpart of defining a test strategy: what do you test first when everything is untested, and who ends up owning it.',
+        star: {
+          situation: 'A fintech team shipped reporting straight from the warehouse with no tests at all; a reconciled revenue figure was wrong for six weeks and leadership stopped trusting every dashboard built on it.',
+          task: 'Stand up a data quality practice that restored confidence without slowing the analytics team down or becoming a QA bottleneck.',
+          action: 'I started from the ten metrics the business actually makes decisions on and traced each back to its source tables, rather than testing the whole warehouse. We layered tests: not-null, unique and domain checks on every model, cross-table reconciliation on the money metrics, and a freshness SLA per source. Results were surfaced in pull-request checks so a broken model could not merge, and I published a one-page scorecard covering completeness, uniqueness, validity, accuracy and timeliness. I paired with two analytics engineers for a month so the tests were owned by the people writing the models.',
+          result: 'Within a quarter we caught 14 bad loads before they reached a dashboard, the six-week class of error disappeared, and leadership reinstated the dashboards as a decision source. Mean time to detect a data defect fell from weeks to under an hour.'
+        },
+        watch: 'Business metrics as the starting point, layered tests by dimension, ownership by the model authors, and a scorecard leadership can actually read.'
+      },
+      {
+        id: 'm5-star-incident', title: 'Handling a bad-data incident in production', tags: ['Incident', 'RCA'],
+        detail: 'How you contain a data defect that has already reached customers, and how you make a repeat structurally impossible.',
+        star: {
+          situation: 'A nightly aggregation double-counted refunds after a replay, and the invoices generated from it overcharged 300 customers.',
+          task: 'Contain the financial impact, correct the numbers, and make a repeat structurally impossible rather than merely unlikely.',
+          action: 'I raised the incident and paused invoicing within 20 minutes, then bounded the damage by diffing source against warehouse counts per key to find the exact affected window. We corrected the rows with a documented backfill and issued the refunds, and I ran a full reconciliation over the previous 30 days to prove the blast radius was closed. The RCA found the replay had no idempotency key, so the fix added one plus a unique constraint that makes a double-write fail loudly, together with a daily variance test that pages on any non-zero money difference.',
+          result: 'Invoicing resumed the same day on a corrected dataset, refunds completed within 48 hours, and the 30-day audit found no further affected invoices. The variance test has since caught two similar replays before any customer was billed.'
+        },
+        watch: 'Speed of containment, a blast radius bounded with evidence, a constraint that makes the error impossible, and a test that keeps watch afterwards.'
+      }
+    ]
+  }
+];
+
 const QUESTIONS = [
   {
     id: 'q1', tags: ['Flakiness', 'Triage'],
@@ -1530,6 +2007,36 @@ const QUESTIONS = [
     id: 'q25', tags: ['Playwright', 'Files', 'Automation'],
     q: 'Walk me through how you would automate a file download and a file upload in Playwright.',
     a: 'For downloads I click the trigger, accept Playwright\u2019s download event into a temporary path, and then assert on the suggested filename and on the file itself \u2014 size, a header line, or a parse of its contents \u2014 rather than trusting that a dialog opened. For uploads I prefer setInputFiles on the file input because it is stable and skips custom widget choreography, with a small fixture file committed to the repository so the test stays self-contained. Crucially I assert the server-side effect, not just the filename chip in the UI, and I have CI upload the downloaded artifacts so a failure can be inspected. The classic pitfall is asserting only on the client: the interface can say "Downloaded" while the file on disk is empty.'
+  },
+  {
+    id: 'q26', tags: ['Data', 'ETL'],
+    q: 'How would you test that an ETL job transformed the data correctly?',
+    a: 'I separate the three questions a pipeline can get wrong. Schema: the output has the columns, types and nullability the contract promises. Volume: row counts and key-level totals match the source within an agreed tolerance, including a deliberate check for duplicates on the table grain. Transformation: the business rule itself, asserted on known inputs \u2014 given these five orders, the revenue-by-day output must equal these values. I prefer small hand-computable fixtures over large snapshots, because a golden file only tells you that something changed, not that it is wrong. Finally I run it twice to prove the load is idempotent, and I cover the empty-table and all-null cases, which is where most transformations actually break.'
+  },
+  {
+    id: 'q27', tags: ['Data', 'Quality'],
+    q: 'What are the five data quality dimensions, and how do you test each?',
+    a: 'Completeness: required values are present, tested with not-null checks per column and row counts per load. Uniqueness: the declared grain is unique, tested with a group-by-having count. Validity: values fall inside their domain \u2014 enums, ranges, formats and referential integrity. Accuracy: the value reflects reality, which needs an independent source, so it is a reconciliation against the system of record rather than an internal rule. Timeliness: the data arrives inside its SLA, tested with a freshness check on the load timestamp. The important point is that only accuracy needs a second source; the other four can be asserted entirely inside the warehouse.'
+  },
+  {
+    id: 'q28', tags: ['Data', 'PII', 'Compliance'],
+    q: 'How do you test data masking without leaking PII?',
+    a: 'I test the mask, not just the pipeline. First a format scan over every restored environment for emails, phone numbers, card-shaped sequences and national identifiers, wired into CI so a leak fails the build. Second a statistical check: the masked set should preserve cardinality and distributions while sharing no values with production, verified by asserting that no production identifier appears anywhere in the target. Third a referential check, because deterministic masking has to keep join keys stable so queries still behave. Finally I test the negative case deliberately \u2014 a known raw value seeded on purpose must not survive the run.'
+  },
+  {
+    id: 'q29', tags: ['Data', 'Reconciliation', 'Judgement'],
+    q: 'Source and target row counts differ by 0.2%. Is that a failure?',
+    a: 'It depends entirely on what the pipeline promises, and the honest answer is that a tolerance must be declared before the data arrives rather than invented after the discrepancy appears. If the source is append-only and the load is complete, any difference is a defect. If the pipeline legitimately filters, deduplicates or applies a late-arriving window, a small variance can be expected \u2014 but it should be a documented per-metric tolerance, checked per key rather than as one global number, because a global count can easily hide a single customer over-counted by a thousand. I would reconcile by key to locate the difference, then either fix the pipeline or encode the tolerance explicitly and alert on the trend.'
+  },
+  {
+    id: 'q30', tags: ['Data', 'Migrations'],
+    q: 'How do you verify a schema migration will not break a running application?',
+    a: 'I treat migrations as a two-phase deployment rather than a single event. The first phase must be additive only \u2014 add the column as nullable or with a default, backfill it, switch reads, and only remove the old column in a later release once every instance has moved. In CI I run the migration against production-shaped data and then run the full suite on top of it, and I keep a second job that points the previous application version at the migrated database to prove backward compatibility. I also assert that the migration is reversible, because a rollback that cannot restore the old shape turns a small failure into an outage.'
+  },
+  {
+    id: 'q31', tags: ['Data', 'Idempotency', 'Pipelines'],
+    q: 'How would you test the idempotency of a nightly data load?',
+    a: 'I run the load twice against the same window and assert that the output is equivalent to a single run: identical row counts, identical sums per key, and no growth in the fact table. Then I make it harder \u2014 replay only a subset of partitions, start two loads concurrently, and kill one halfway to prove that a partial write is either rolled back or completed by the retry. The assertion I care about most is the invariant that survives any number of runs: count and sum per grain must be unchanged. A load that passes only when it is run once in perfect conditions has not been tested, it has been demoed.'
   }
 ];
 /* ============================================================
@@ -1541,7 +2048,8 @@ const ICONS = {
   m1: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3" stroke-linecap="round"/></svg>',
   m2: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6M13.5 4l-3 16"/></svg>',
   m3: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 20v-2a4 4 0 0 0-3-3.87M16 4.13a4 4 0 0 1 0 7.75"/></svg>',
-  m4: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 1 1 4.2 3.4c-.9.5-1.4 1-1.4 2"/><path d="M12 17.5h.01"/></svg>'
+  m4: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 1 1 4.2 3.4c-.9.5-1.4 1-1.4 2"/><path d="M12 17.5h.01"/></svg>',
+  m5: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3V6"/><path d="M4.5 12v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/></svg>'
 };
 
 const MODULES = [
@@ -1552,14 +2060,17 @@ const MODULES = [
   { id: 'm3', short: 'Leadership', label: 'Behavioral & Leadership', accent: 'emerald', icon: ICONS.m3,
     tagline: 'STAR-method prompts for senior-level situations, written as models you can rehearse aloud in professional technical English.', groups: M3 },
   { id: 'm4', short: 'Mock Interview', label: 'Mock Interview Simulator', accent: 'amber', icon: ICONS.m4,
-    tagline: 'Tricky conceptual questions with model answers. Reveal the answer, then honestly mark yourself as Mastered or Needs Review.', groups: null, questions: QUESTIONS }
+    tagline: 'Tricky conceptual questions with model answers. Reveal the answer, then honestly mark yourself as Mastered or Needs Review.', groups: null, questions: QUESTIONS },
+  { id: 'm5', short: 'Data Testing', label: 'Data & Database Testing', accent: 'teal', icon: ICONS.m5,
+    tagline: 'Test data management, PII masking, SQL-level assertions, schema migrations, ETL and pipeline validation, data quality dimensions, reconciliation, and streaming correctness \u2014 with SQL, Python and TypeScript.', groups: M5 }
 ];
 
 const ACCENT = {
   indigo: { text: 'text-indigo-300', soft: 'bg-indigo-500/10', border: 'border-indigo-400/40', bar: 'from-indigo-500 to-sky-400' },
   sky:    { text: 'text-sky-300',    soft: 'bg-sky-500/10',    border: 'border-sky-400/40',    bar: 'from-sky-500 to-cyan-300' },
   emerald:{ text: 'text-emerald-300',soft: 'bg-emerald-500/10',border: 'border-emerald-400/40',bar: 'from-emerald-500 to-teal-300' },
-  amber:  { text: 'text-amber-300',  soft: 'bg-amber-500/10',  border: 'border-amber-400/40',  bar: 'from-amber-500 to-orange-400' }
+  amber:  { text: 'text-amber-300',  soft: 'bg-amber-500/10',  border: 'border-amber-400/40',  bar: 'from-amber-500 to-orange-400' },
+  teal:   { text: 'text-teal-300',   soft: 'bg-teal-500/10',   border: 'border-teal-400/40',   bar: 'from-teal-500 to-cyan-300' }
 };
 
 function loadState() {
@@ -1597,10 +2108,19 @@ function plain(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'
 
 const RE_JS = /(\/\/[^\n]*)|('[^'\n]*'|"[^"\n]*")|\b(async|await|function|const|let|var|return|if|else|for|while|try|catch|finally|throw|new|class|export|import|from|default|typeof|instanceof|null|undefined|true|false|this|of|in|do|break|continue|yield|super|extends|void|delete)\b|\b(\d+(?:\.\d+)?)\b/g;
 const RE_PY = /(#[^\n]*)|('[^'\n]*'|"[^"\n]*")|\b(def|class|import|from|return|if|elif|else|for|while|try|except|finally|raise|with|as|async|await|lambda|None|True|False|and|or|not|in|is|pass|yield|global|nonlocal|self|assert|print)\b|\b(\d+(?:\.\d+)?)\b/g;
+const RE_SQL = /(--[^\n]*)|('(?:[^'\n]|'')*')|\b(SELECT|FROM|WHERE|GROUP|BY|HAVING|ORDER|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AS|AND|OR|NOT|NULL|IS|IN|BETWEEN|LIKE|EXISTS|DISTINCT|CASE|WHEN|THEN|ELSE|END|WITH|UNION|ALL|EXCEPT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|VIEW|INDEX|DROP|ALTER|ADD|CONSTRAINT|PRIMARY|FOREIGN|REFERENCES|USING|COUNT|SUM|AVG|MIN|MAX|ROUND|COALESCE|CAST|ABS|OVER|PARTITION|ROW_NUMBER|RANK|LAG|LEAD|ASC|DESC|LIMIT|OFFSET|TRUE|FALSE|CURRENT_DATE|DATE|REF)\b|\b(\d+(?:\.\d+)?)\b/gi;
+
+const LANG_LABEL = {
+  js: 'JavaScript / TypeScript',
+  ts: 'TypeScript',
+  py: 'Python',
+  sql: 'SQL',
+  yaml: 'Config / YAML'
+};
 
 function highlight(code, mode) {
   const src = plain(code);
-  const re = mode === 'py' ? RE_PY : RE_JS;
+  const re = mode === 'py' ? RE_PY : (mode === 'sql' ? RE_SQL : RE_JS);
   return src.replace(re, function (m, c, s, k, n) {
     if (c) return '<span class="text-slate-500 italic">' + c + '</span>';
     if (s) return '<span class="text-emerald-300">' + s + '</span>';
@@ -1646,7 +2166,7 @@ function updateProgress() {
   document.getElementById('pct').textContent = o.pct;
   document.getElementById('bar').style.width = o.pct + '%';
 
-  const topics = ['m1', 'm2', 'm3'].map(moduleProgress);
+  const topics = ['m1', 'm2', 'm3', 'm5'].map(moduleProgress);
   const tDone = topics.reduce(function (a, p) { return a + p.done; }, 0);
   const tTotal = topics.reduce(function (a, p) { return a + p.total; }, 0);
   const q = moduleProgress('m4');
@@ -1674,7 +2194,7 @@ function renderTabs() {
     const p = moduleProgress(m.id);
     const a = ACCENT[m.accent];
     return '<button type="button" data-tab="' + m.id + '" aria-current="' + (active ? 'page' : 'false') + '"' +
-      ' class="group relative min-w-[240px] snap-start rounded-2xl border p-4 text-left transition-all duration-200 ' +
+      ' class="group relative min-w-[200px] snap-start rounded-2xl border p-4 text-left transition-all duration-200 ' +
       (active
         ? a.border + ' ' + a.soft + ' shadow-glow'
         : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]') + '">' +
@@ -1713,25 +2233,27 @@ function starHtml(star) {
 }
 
 function codeHtml(code) {
-  const active = lang;
-  function block(mode, label, text) {
+  const keys = Object.keys(code);
+  const active = keys.indexOf(lang) >= 0 ? lang : keys[0];
+  function block(mode) {
     const isActive = active === mode;
     return '<pre data-code="' + mode + '" class="' + (isActive ? '' : 'hidden ') +
       'thin-scroll max-h-[460px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed text-slate-300">' +
-      highlight(text, mode) + '</pre>';
+      highlight(code[mode], mode) + '</pre>';
   }
   return '<div data-codeblock class="mt-5 overflow-hidden rounded-xl border border-white/10 bg-ink-950">' +
     '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.02] px-3 py-2">' +
       '<span class="font-mono text-[11px] text-slate-500">// implementation</span>' +
-      '<div class="flex items-center gap-1">' +
-        '<button type="button" data-lang="js" class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition ' +
-          (active === 'js' ? 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40' : 'text-slate-500 hover:text-slate-300') + '">JavaScript / TypeScript</button>' +
-        '<button type="button" data-lang="py" class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition ' +
-          (active === 'py' ? 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40' : 'text-slate-500 hover:text-slate-300') + '">Python</button>' +
+      '<div class="flex flex-wrap items-center gap-1">' +
+        keys.map(function (k) {
+          return '<button type="button" data-lang="' + k + '" class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition ' +
+            (active === k ? 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/40' : 'text-slate-500 hover:text-slate-300') + '">' +
+            esc(LANG_LABEL[k] || k) + '</button>';
+        }).join('') +
         '<button type="button" data-copy class="ml-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-slate-500 transition hover:text-white hover:border-white/25">Copy</button>' +
       '</div>' +
     '</div>' +
-    block('js', '', code.js) + block('py', '', code.py) +
+    keys.map(block).join('') +
   '</div>';
 }
 
