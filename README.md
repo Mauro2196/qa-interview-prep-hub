@@ -30,12 +30,12 @@ npx serve .
 | Module | Focus |
 | --- | --- |
 | **Technical & Automation Architecture** | Selenium / W3C / BiDi, Cypress execution model, WebdriverIO, CI/CD pipelines, parallel execution vs sharding, flaky-test management, reporting frameworks, locator strategy, cross-browser & visual regression — plus deep **Playwright** coverage: execution model, locators & web-first assertions, `playwright.config` projects & sharding, tracing & UI mode, network interception, and fixtures |
-| **Coding & Algorithms** | Log/string parsing, grouping & dedup, deep equality, a **custom test runner**, retry with exponential backoff, concurrency limiter, debounce + fake timers, a test-tagging DSL, and **Playwright-style helpers** (a web-first polling assertion, a storage-state session helper) — each with **JavaScript/TypeScript ⇄ Python** toggles, syntax highlighting and copy-to-clipboard |
+| **Coding & Algorithms** | Log/string parsing, grouping & dedup, deep equality, a **custom test runner**, retry with exponential backoff, concurrency limiter, debounce + fake timers, a test-tagging DSL, **next permutation** (the O(n) Palantir classic) and **Playwright-style helpers** (a web-first polling assertion, a storage-state session helper) — each with **JavaScript/TypeScript ⇄ Python** toggles, syntax highlighting and copy-to-clipboard |
 | **Behavioral & Leadership** | 12 STAR prompts: production bugs, pushing back on deadlines, mentoring juniors, defining a test strategy from scratch, rebuilding trust in a flaky suite, disagree-and-commit, a **Selenium/Cypress → Playwright migration**, and **cutting CI feedback below 10 minutes** |
 | **Mock Interview Simulator** | 31 flashcards with model answers in professional technical English (Playwright fixtures, shared auth, `page.route` traps, CI-vs-local diagnosis, plus ETL, data quality dimensions, masking, reconciliation, schema migrations and idempotent loads), reveal-on-demand, **Mastered / Needs Review** grading, filters, and a **Generate Random Mock Question** spotlight |
 | **Data & Database Testing** | 13 topics in 5 groups: test data management & factories, PII masking and compliant environments, synthetic/property-based data, SQL-level assertions, schema migrations & backward compatibility, API-payload vs persisted-row validation, ETL transformation testing, the five data quality dimensions, reconciliation & freshness, streaming/CDC correctness, and data volume & query budgets — with **SQL ⇄ Python ⇄ TypeScript** snippets — plus 2 data-leadership STAR prompts |
 
-**Totals:** 50 checkable topics, 14 STAR prompts, 19 code snippets (JavaScript/TypeScript, Python
+**Totals:** 51 checkable topics, 14 STAR prompts, 20 code snippets (JavaScript/TypeScript, Python
 and SQL) and 31 mock questions.
 
 ### 3 · Key features
