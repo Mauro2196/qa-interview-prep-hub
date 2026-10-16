@@ -17,3 +17,9 @@ package.json
 # --- Logs & temp ---
 *.log
 *.tmp
+
+# --- Scratch / accidental editor files ---
+# This site is a single self-contained HTML file with no build step, so a
+# stray .ts/.tsx at the root is always an editor accident, never real work.
+*.ts
+*.tsx
