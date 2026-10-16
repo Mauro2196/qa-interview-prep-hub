@@ -1924,6 +1924,117 @@ def assert_reconciled(conn, tolerance_cents=0, limit=20):
     ]
   },
   {
+    name: 'Framework design & data migrations',
+    hint: 'Architecture questions. Name the layers, say who owns each one, and be explicit about the acceptance gate.',
+    items: [
+      {
+        id: 'm5-framework', title: 'Designing a data-testing automation framework', tags: ['Architecture', 'Rule registry', 'Ownership'],
+        detail: 'This is asked to find out whether you can build something analysts will actually keep using. A data-testing framework differs from a UI framework in three ways, and every design decision follows from them: there is no DOM to wait on, failures are statistical rather than binary, and the people adding checks will not write Python.',
+        bullets: [
+          'Layer it deliberately: connectors (warehouse, stream, file) feed a contract layer (schema, grain, domain), which feeds a rule registry, which feeds one orchestrator and one reporter. Everything below the contract layer is plumbing and must never need changing when a new check is added.',
+          'Keep rules declarative and living beside the model they describe \u2014 a dbt schema.yml, an expectations suite, a SodaCL file. A separate test repository guarantees drift within two quarters.',
+          'Route failures by ownership, not by exception. A rule that fails should land on the desk of whoever owns the model, and the report should say whose desk that is.',
+          'Two cadences, never one: a fast gate on pull requests covering not-null, unique and domain checks on changed models only, and a scheduled full sweep for volume, freshness, reconciliation and accuracy. Conflating them is how a data team ends up switching the whole thing off.',
+          'Every failure must ship the offending keys and a sample of rows. A framework that prints "revenue check failed" costs more time than it saves.',
+          'Design for non-engineers: an analyst should be able to add a one-line rule in YAML without touching code, and the framework generates the SQL for them.'
+        ]
+      },
+      {
+        id: 'm5-migration-validation', title: 'Data migration validation & cutover gates', tags: ['Migration', 'Cutover', 'Acceptance'],
+        detail: 'Moving data between systems is where testing stops being about correctness in isolation and becomes about proving equivalence under time pressure. The senior answer has a before-phase, a during-phase and an acceptance gate that was agreed in writing before anyone felt the deadline.',
+        bullets: [
+          'Profile before you migrate: row counts, distinct keys, null rates, min and max per numeric column, and a checksum per partition. Those frozen numbers become the acceptance criteria \u2014 not an estimate produced during the incident.',
+          'Validate the extract separately from the load. Lost rows almost always leave at the extract boundary, and a single end-to-end count cannot tell you which side lost them.',
+          'Dual-write or shadow-read across the overlap window and prove there are no lost updates, then run the same query against both systems before flipping any traffic.',
+          'Sampled validation buys speed, not safety. If money columns exist, reconcile them in full and reserve sampling for descriptive columns.',
+          'Write the cutover gate before the weekend starts: the exact variance that is acceptable, who signs off, and the rollback trigger. A gate discovered under pressure is not a gate.',
+          'Keep the source readable until the acceptance window closes, and schedule a delayed re-run of the full reconciliation to catch drift after cutover.'
+        ]
+      },
+      {
+        id: 'm5-backfill', title: 'Backfilling safely with live downstream consumers', tags: ['Backfill', 'Idempotency', 'Versioning'],
+        detail: 'A backfill rewrites history that reports have already consumed, which makes it the highest-risk routine operation in a data platform. The design question is how a re-run becomes provably safe; the testing question is how you prove that before the job ever touches production.',
+        bullets: [
+          'Version every write: a batch_id plus loaded_at, and have downstream reads select the newest completed batch per key instead of assuming one row per key exists.',
+          'Append-and-switch rather than UPDATE in place. A new batch behind a view is reversible on Monday morning; an update is not.',
+          'Prove idempotency on a copy first: run the same window twice and assert the count and sum per key are unchanged before it reaches production.',
+          'Bound the blast radius by partition and key range, and time-box each chunk so a runaway job cannot hold locks overnight.',
+          'Alert on the invariant rather than on the job. A daily count-and-sum comparison per key catches a double-write even when the job itself reported success.'
+        ],
+        code: {
+          sql: `-- 1. Append a new batch. The previous one stays untouched and readable,
+--    which is exactly what makes the backfill reversible.
+INSERT INTO fct_orders_history (order_id, order_date, total_cents, batch_id, loaded_at)
+SELECT order_id, order_date, total_cents, :batch_id AS batch_id, now() AS loaded_at
+FROM stg_orders
+WHERE order_date BETWEEN :start AND :end;
+
+-- 2. Downstream reads only completed batches, newest row per key
+SELECT order_id, order_date, total_cents
+FROM (
+  SELECT h.*,
+         ROW_NUMBER() OVER (
+           PARTITION BY order_id ORDER BY batch_id DESC, loaded_at DESC
+         ) AS rn
+  FROM fct_orders_history h
+  JOIN meta_backfills b USING (batch_id)
+  WHERE b.status = 'completed'
+) ranked
+WHERE rn = 1
+  AND order_date BETWEEN :start AND :end;
+
+-- 3. Pre-flight guard: refuse to start a window that already overlaps a
+--    completed batch. Zero rows returned means safe to write.
+SELECT COUNT(*) AS overlapping
+FROM meta_backfills
+WHERE status = 'completed'
+  AND window_start <= :end
+  AND window_end   >= :start;`,
+          py: `"""The runner contract: pre-flight, bounded chunks, verify, then commit."""
+from datetime import timedelta
+
+def preflight(conn, start, end, batch_id):
+    """Abort before writing a window that overlaps a completed batch."""
+    overlapping = conn.value("""
+        SELECT COUNT(*) FROM meta_backfills
+        WHERE status = 'completed'
+          AND window_start <= %s AND window_end >= %s
+    """, (end, start))
+    assert overlapping == 0, \\
+        f'window {start}..{end} overlaps {overlapping} completed batch(es)'
+    conn.execute(
+        "INSERT INTO meta_backfills (batch_id, window_start, window_end, status) "
+        "VALUES (%s, %s, %s, 'running')",
+        (batch_id, start, end),
+    )
+
+def chunks(start, end, days=7):
+    """Bounded chunks so no single statement holds locks overnight."""
+    cur = start
+    while cur < end:
+        nxt = min(cur + timedelta(days=days), end)
+        yield cur, nxt
+        cur = nxt
+
+def run(conn, start, end, batch_id):
+    preflight(conn, start, end, batch_id)
+    try:
+        for c_start, c_end in chunks(start, end):
+            loaded = conn.execute(
+                LOAD_SQL, {'batch_id': batch_id, 'start': c_start, 'end': c_end})
+            assert_idempotent(conn, batch_id, c_start, c_end)   # from m5-etl
+            print(f'  {c_start:%Y-%m-%d}..{c_end:%Y-%m-%d}: {loaded} rows, verified')
+        conn.execute("UPDATE meta_backfills SET status='completed' WHERE batch_id=%s",
+                     (batch_id,))
+    except Exception:
+        # Leave the batch as 'running'. Downstream reads only 'completed',
+        # so a half-written backfill is invisible, never half-applied.
+        raise`
+        }
+      }
+    ]
+  },
+  {
     name: 'Data testing in practice',
     hint: 'Structure every answer as Situation \u2192 Task \u2192 Action \u2192 Result, quantify the Result, and never blame an individual.',
     items: [
@@ -1948,6 +2059,17 @@ def assert_reconciled(conn, tolerance_cents=0, limit=20):
           result: 'Invoicing resumed the same day on a corrected dataset, refunds completed within 48 hours, and the 30-day audit found no further affected invoices. The variance test has since caught two similar replays before any customer was billed.'
         },
         watch: 'Speed of containment, a blast radius bounded with evidence, a constraint that makes the error impossible, and a test that keeps watch afterwards.'
+      },
+      {
+        id: 'm5-star-migration', title: 'Migrating a warehouse with zero lost rows', tags: ['Migration', 'Cutover', 'Scale'],
+        detail: 'The flagship data-migration story: how you prove equivalence on millions of rows under a hard deadline, and what you refuse to do without evidence.',
+        star: {
+          situation: 'A twelve-year-old reporting warehouse had to move to a new platform before the licence expired in four months: 3,400 tables, and no documented grain on most of them.',
+          task: 'Move the data and every downstream report without losing history, and without freezing the analytics roadmap for a quarter.',
+          action: 'I profiled every table before assuming anything \u2014 row counts, distinct keys, null rates and a per-partition checksum became the frozen acceptance criteria. We classified tables by actual usage from the query log, migrated the 200 that were really read, and put the long tail behind a read-only archive. Each migration appended to a versioned table rather than mutating one, we dual-read both systems for two weeks, and money columns were reconciled in full while descriptive columns were sampled. The cutover gate was written in advance: zero variance on money, 0.1% on volume, three named sign-offs, and a rollback trigger if any check failed.',
+          result: 'We finished with six weeks to spare and zero rows lost across the migrated set; the first reconciliation after cutover came back clean. The profiling step became the standard pre-flight check for every later migration, and decommissioning the 3,200 unused tables cut the platform bill by about a third.'
+        },
+        watch: 'Evidence before estimation, usage-driven scope, append-and-switch reversibility, an acceptance gate agreed before the pressure, and a cost saving nobody had bothered to measure.'
       }
     ]
   }
@@ -2108,6 +2230,21 @@ const QUESTIONS = [
     id: 'q31', tags: ['Data', 'Idempotency', 'Pipelines'],
     q: 'How would you test the idempotency of a nightly data load?',
     a: 'I run the load twice against the same window and assert that the output is equivalent to a single run: identical row counts, identical sums per key, and no growth in the fact table. Then I make it harder \u2014 replay only a subset of partitions, start two loads concurrently, and kill one halfway to prove that a partial write is either rolled back or completed by the retry. The assertion I care about most is the invariant that survives any number of runs: count and sum per grain must be unchanged. A load that passes only when it is run once in perfect conditions has not been tested, it has been demoed.'
+  },
+  {
+    id: 'q32', tags: ['Data', 'Architecture', 'Framework'],
+    q: 'How would you design an automation framework for data testing?',
+    a: 'I would layer it so that adding a check never means changing the engine. Connectors read from the warehouse, the stream or a file and normalise into one internal shape. A contract layer holds what we know to be true \u2014 schema, declared grain, allowed domains, freshness SLA. A rule registry turns those plus any bespoke assertion into SQL or Python. One orchestrator decides what runs where, and one reporter publishes results with the offending keys attached. Two cadences: a fast gate on pull requests covering not-null, unique and domain checks on changed models only, and a scheduled sweep for volume, freshness, reconciliation and accuracy. Rules live in a declarative file beside the model they describe so ownership stays where the code changes, and failures route to the model owner rather than to a shared inbox. The design constraint I would state out loud is that an analyst must be able to add a one-line rule without writing Python, because a framework only engineers can extend is a framework that stops growing after the first month.'
+  },
+  {
+    id: 'q33', tags: ['Data', 'Migration', 'Cutover'],
+    q: 'How do you validate a data migration end to end?',
+    a: 'In three phases, with the acceptance criteria frozen before the first row moves. Before: I profile the source \u2014 row counts, distinct keys, null rates, min and max per numeric column, a checksum per partition \u2014 and those numbers become the gate. I also validate the extract and the load separately, because lost rows almost always leave at the extract boundary and a single end-to-end count cannot tell you which side lost them. During: I dual-write or shadow-read across an overlap window, prove there are no lost updates, and run the same query against both systems before any traffic moves. After: full reconciliation on money columns, sampled validation on descriptive ones, plus a delayed re-run a few days later to catch drift. The part I refuse to negotiate is the gate itself \u2014 exact variance, named sign-offs and a rollback trigger, agreed in writing before the cutover weekend. A tolerance invented once the numbers are already on screen is not a tolerance, it is a decision to ship the defect.'
+  },
+  {
+    id: 'q34', tags: ['Data', 'Backfill', 'Safety'],
+    q: 'A nightly job wrote duplicate rows for three nights. How do you fix the data and prevent it happening again?',
+    a: 'I separate the correction from the prevention, because they are different problems with different owners. For the correction: stop the job first, then bound the damage by counting and summing per key over the affected window so I know exactly which keys are inflated and by how much. I would not delete in place \u2014 I would write a corrected batch with a new batch_id and switch the downstream view to it, which keeps the original intact and makes the fix reversible if my correction is itself wrong. Then I reconcile against the source to prove the corrected figures, not just the row counts. For prevention: the job needs an idempotency key and a unique constraint that makes a double-write fail loudly rather than silently, a pre-flight check that refuses to start a window overlapping a completed batch, and an alert on the daily count-and-sum invariant per key so the next regression is caught before anyone reports a wrong number. I would also ask why three nights passed unnoticed, because a defect that survives that long is a monitoring gap rather than a data bug.'
   }
 ];
 /* ============================================================
@@ -2133,7 +2270,7 @@ const MODULES = [
   { id: 'm4', short: 'Mock Interview', label: 'Mock Interview Simulator', accent: 'amber', icon: ICONS.m4,
     tagline: 'Tricky conceptual questions with model answers. Reveal the answer, then honestly mark yourself as Mastered or Needs Review.', groups: null, questions: QUESTIONS },
   { id: 'm5', short: 'Data Testing', label: 'Data & Database Testing', accent: 'teal', icon: ICONS.m5,
-    tagline: 'Test data management, PII masking, SQL-level assertions, schema migrations, ETL and pipeline validation, data quality dimensions, reconciliation, and streaming correctness \u2014 with SQL, Python and TypeScript.', groups: M5 }
+    tagline: 'Test data management, PII masking, SQL-level assertions, schema and data migrations, safe backfills, ETL and pipeline validation, data quality dimensions, reconciliation, streaming correctness, and the design of a data-testing framework itself \u2014 with SQL, Python and TypeScript.', groups: M5 }
 ];
 
 const ACCENT = {
@@ -2211,9 +2348,9 @@ function toast(msg) {
 }
 
 function moduleItems(mod) {
-  if (mod.id === 'm4') return mod.questions;
+  if (mod.id === 'm4') return mod.questions || [];
   const out = [];
-  mod.groups.forEach(function (g) { g.items.forEach(function (i) { out.push(i); }); });
+  (mod.groups || []).forEach(function (g) { (g.items || []).forEach(function (i) { out.push(i); }); });
   return out;
 }
 
